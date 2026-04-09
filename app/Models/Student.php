@@ -5,17 +5,15 @@ namespace App\Models;
 class Student extends User
 {
     protected $fillable = [
-        "name",
-        "password",
-        "gender",
-        "date_of_birth",
-        "phone",
-        "address",
-        "avatar",
         "student_type",
         "school",
-        "level",
+        "grade",
         "work",
         "position",
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
