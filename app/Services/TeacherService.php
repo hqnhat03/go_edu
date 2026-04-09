@@ -15,16 +15,31 @@ class TeacherService
     function createTeacher(CreateRequest $request)
     {
         $data = $request->validated();
-        $user = User::create($data);
-        $user->assignRole('teacher');
-        $teacher = $user->teacher()->create([
-            'nationality' => $data['nationality'],
-            'expertise' => $data['expertise'],
-            'experience' => $data['experience'],
-            'target_student_type' => $data['target_student_type'],
-            'bio' => $data['bio']
-        ]);
-        return array_merge($user->toArray(), $teacher->toArray());
+
+        return DB::transaction(function () use ($data) {
+            // Tạo user
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'password' => 'password',
+                'address' => $data['address'],
+                'gender' => $data['gender'],
+                'status' => $data['status'],
+                'day_of_birth' => $data['day_of_birth'],
+                'avatar' => $data['avatar'],
+            ]);
+            $user->assignRole('teacher');
+            $teacher = $user->teacher()->create([
+                'nationality' => $data['nationality'],
+                'expertise' => $data['expertise'],
+                'experience' => $data['experience'],
+                'target_student_type' => $data['target_student_type'],
+                'bio' => $data['bio']
+            ]);
+
+            return $user->load('teacher');
+        });
     }
 
     function listTeacher()
@@ -37,11 +52,23 @@ class TeacherService
     {
         $data = $request->validated();
         $user = User::findOrFail($id);
+        if (!$user->teacher) {
+            throw new UserException('Không tìm thấy giáo viên');
+        }
 
         // Sử dụng Transaction để đảm bảo an toàn dữ liệu
         return DB::transaction(function () use ($user, $data) {
             // Cập nhật bảng users
-            $user->update($data);
+            $user->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'address' => $data['address'],
+                'gender' => $data['gender'],
+                'status' => $data['status'],
+                'day_of_birth' => $data['day_of_birth'],
+                'avatar' => $data['avatar'],
+            ]);
 
             // Cập nhật bảng teachers (thông qua relationship)
             // Lưu ý: Đảm bảo $data chứa các trường của bảng teacher
@@ -59,6 +86,9 @@ class TeacherService
     function getTeacher($id)
     {
         $user = User::findOrFail($id);
+        if (!$user->teacher) {
+            throw new UserException('Không tìm thấy giáo viên');
+        }
 
         return $user->load('teacher')->toArray();
     }
@@ -66,6 +96,9 @@ class TeacherService
     function deleteTeacher($id)
     {
         $user = User::findOrFail($id);
+        if (!$user->teacher) {
+            throw new UserException('Không tìm thấy giáo viên');
+        }
         $user->delete();
     }
 }
