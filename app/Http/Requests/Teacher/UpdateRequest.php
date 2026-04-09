@@ -32,7 +32,7 @@ class UpdateRequest extends FormRequest
             'experience' => 'required|numeric',
             'target_student_type' => 'required',
             'status' => 'required',
-            'birthday' => 'required',
+            'day_of_birth' => 'required',
             'avatar' => 'nullable',
             'bio' => 'nullable',
         ];
@@ -52,7 +52,7 @@ class UpdateRequest extends FormRequest
             'experience.required' => 'Kinh nghiệm không được để trống',
             'target_student_type.required' => 'Đối tượng học viên không được để trống',
             'status.required' => 'Trạng thái không được để trống',
-            'birthday.required' => 'Ngày sinh không được để trống',
+            'day_of_birth.required' => 'Ngày sinh không được để trống',
         ];
     }
 }
