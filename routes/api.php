@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,5 +30,14 @@ Route::prefix('/auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
+});
+
+
+Route::middleware(['auth:api'])->prefix('/teachers')->group(function () {
+    Route::middleware(['permission:teacher_list'])->get('/', [TeacherController::class, 'listTeacher']);
+    Route::middleware(['permission:teacher_create'])->post('/', [TeacherController::class, 'createTeacher']);
+    Route::middleware(['permission:teacher_detail'])->get('/{id}', [TeacherController::class, 'getTeacher']);
+    Route::middleware(['permission:teacher_edit'])->put('/{id}', [TeacherController::class, 'editTeacher']);
+    Route::middleware(['permission:teacher_delete'])->delete('/{id}', [TeacherController::class, 'deleteTeacher']);
 });
 

@@ -37,6 +37,10 @@ class AuthService
         // $data = $request->validated();
         $user = User::where('email', $request->email)->first();
 
+        if (!$user) {
+            throw new UserException('Sai email hoặc mật khâu');
+        }
+
         // Lấy role yêu cầu từ Middleware
         $requiredRole = $request->attributes->get('required_role');
 
