@@ -10,6 +10,7 @@ class Teacher extends User
      * @var array<int, string>
      */
     protected $fillable = [
+        'nationality',           // Quốc tịch
         'expertise',             // Chuyên môn
         'experience',            // Kinh nghiệm
         'target_student_type',   // Người học (tất cả, học sinh, nhân viên)

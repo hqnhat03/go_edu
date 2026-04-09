@@ -18,6 +18,6 @@ class Authenticate extends Middleware
 
     protected function unauthenticated($request, array $guards)
     {
-        throw new JWTException("Token not provided or invalid");
+        throw new JWTException("Unauthenticated");
     }
 }

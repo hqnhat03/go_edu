@@ -4,8 +4,11 @@ namespace App\Exceptions;
 
 use App\Helpers\ApiResponse;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\UnauthorizedException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -46,8 +49,17 @@ class Handler extends ExceptionHandler
                 return ApiResponse::error($e->getMessage(), [], 400);
             }
 
+            if ($e instanceof UnauthorizedException) {
+                return ApiResponse::error("Không có quyền", [], 403);
+            }
+
+            if ($e instanceof NotFoundHttpException) {
+                return ApiResponse::error("Không tìm thấy", [], 404);
+            }
+
             // 3. Nếu là API, luôn ép trả về JSON khi gặp lỗi khác (để tránh bị redirect ra layout HTML)
             if ($request->is('api/*')) {
+                dd($e);
                 $statusCode = method_exists($e, 'getStatusCode') ? $e->getCode() : 500;
                 return ApiResponse::error($e->getMessage(), [], $statusCode);
             }

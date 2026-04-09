@@ -24,9 +24,9 @@ class CheckRoleByDomain
 
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
         $domainMap = [
-            'admin.go.edu.vn' => 'admin',
-            'teacher.go.edu.vn' => 'teacher',
-            'student.go.edu.vn' => 'student',
+            'admin.go.edu.vn' => ['super_admin', 'admin'],
+            'teacher.go.edu.vn' => ['teacher'],
+            'student.go.edu.vn' => ['student'],
         ];
 
         // Nếu domain không nằm trong danh sách quản lý, có thể chặn hoặc bỏ qua
