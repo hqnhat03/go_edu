@@ -17,8 +17,20 @@ services:
     networks:
       - laravel_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_laravel
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - laravel_network
+
 volumes:
   mysql_data:
+  redis_data:
 
 networks:
   laravel_network:

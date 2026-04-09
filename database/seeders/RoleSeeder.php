@@ -17,12 +17,21 @@ class RoleSeeder extends Seeder
     {
         $adminUser = User::create([
             'name' => 'admin',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password')
+            'email' => 'admin@gmail.com',
+            'password' => 'password'
+        ]);
+        $superAdminUser = User::create([
+            'name' => 'super_admin',
+            'email' => 'super_admin@gmail.com',
+            'password' => 'password'
         ]);
 
+
+        $superAdmin = Role::create(['name' => 'super_admin']);
         $admin = Role::create(['name' => 'admin']);
-        $user = Role::create(['name' => 'user']);
+        Role::create(['name' => 'user']);
+        Role::create(['name' => 'student']);
+        Role::create(['name' => 'teacher']);
 
         $manageUsers = Permission::create(['name' => 'manage users']);
 

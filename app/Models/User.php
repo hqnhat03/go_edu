@@ -33,6 +33,11 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'gender',                // Giới tính
+        'date_of_birth',         // Ngày sinh
+        'phone',                 // Số điện thoại
+        'address',               // Địa chỉ
+        'avatar',                // Hình đại diện
     ];
 
     /**
@@ -54,4 +59,14 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function student()
+    {
+        return $this->hasOne(Student::class);
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class);
+    }
 }

@@ -16,17 +16,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('/auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::middleware(['check.domain'])->post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
+    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
     Route::middleware(['auth:api'])->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
-        // Route::post('/logout', [AuthController::class, 'logout']);
-
-        // Route::get('/admin', function () {
-        //     return 'Admin only';
-        // })->middleware('role:admin');
-
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 });
 
