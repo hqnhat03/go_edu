@@ -54,12 +54,12 @@ class Handler extends ExceptionHandler
             }
 
             if ($e instanceof NotFoundHttpException) {
-                dd($e);
                 return ApiResponse::error("Không tìm thấy", [], 404);
             }
 
             // 3. Nếu là API, luôn ép trả về JSON khi gặp lỗi khác (để tránh bị redirect ra layout HTML)
             if ($request->is('api/*')) {
+                dd($e->getMessage());
                 $statusCode = method_exists($e, 'getStatusCode') ? $e->getCode() : 500;
                 return ApiResponse::error($e->getMessage(), [], $statusCode);
             }

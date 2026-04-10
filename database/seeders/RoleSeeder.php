@@ -15,7 +15,6 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(PermissionSeeder::class);
 
         $adminUser = User::create([
             'name' => 'admin',
@@ -74,6 +73,10 @@ class RoleSeeder extends Seeder
             'student_in_course_detail',
             'student_in_course_edit',
             'student_in_course_delete',
+            'subject_list',
+            'subject_create',
+            'subject_edit',
+            'subject_delete',
         ]);
         $superAdmin->syncPermissions(Permission::all());
         $adminUser->assignRole($admin);
