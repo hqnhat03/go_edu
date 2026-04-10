@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LevelController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillLevelController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
@@ -66,4 +67,11 @@ Route::middleware(['auth:api'])->prefix('/levels')->group(function () {
     Route::middleware(['permission:level_create'])->post('/', [LevelController::class, 'createLevel']);
     Route::middleware(['permission:level_edit'])->put('/{id}', [LevelController::class, 'updateLevel']);
     Route::middleware(['permission:level_delete'])->delete('/{id}', [LevelController::class, 'deleteLevel']);
+});
+
+Route::middleware(['auth:api'])->prefix('/roles')->group(function () {
+    Route::middleware(['permission:role_list'])->get('/', [RoleController::class, 'listRole']);
+    Route::middleware(['permission:role_create'])->post('/', [RoleController::class, 'createRole']);
+    Route::middleware(['permission:role_edit'])->put('/{id}', [RoleController::class, 'updateRole']);
+    Route::middleware(['permission:role_delete'])->delete('/{id}', [RoleController::class, 'deleteRole']);
 });

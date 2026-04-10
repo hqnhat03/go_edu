@@ -81,6 +81,10 @@ class RoleSeeder extends Seeder
             'level_create',
             'level_edit',
             'level_delete',
+            'role_list',
+            'role_create',
+            'role_edit',
+            'role_delete',
         ]);
         $superAdmin->syncPermissions(Permission::all());
         $adminUser->assignRole($admin);

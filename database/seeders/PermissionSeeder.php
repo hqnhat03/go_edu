@@ -64,6 +64,10 @@ class PermissionSeeder extends Seeder
             'level_edit',
             'level_create',
             'level_delete',
+            'role_list',
+            'role_create',
+            'role_edit',
+            'role_delete',
         ];
 
         foreach ($resources as $resource) {
