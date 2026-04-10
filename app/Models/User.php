@@ -38,6 +38,7 @@ class User extends Authenticatable implements JWTSubject
         'phone',                 // Số điện thoại
         'address',               // Địa chỉ
         'avatar',                // Hình đại diện
+        'status',
     ];
 
     /**
@@ -68,5 +69,10 @@ class User extends Authenticatable implements JWTSubject
     public function teacher()
     {
         return $this->hasOne(Teacher::class);
+    }
+
+    public function guardian()
+    {
+        return $this->hasOne(Guardian::class);
     }
 }

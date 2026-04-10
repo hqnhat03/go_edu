@@ -7,7 +7,8 @@ use App\Http\Requests\Student\CreateRequest;
 use App\Http\Requests\Student\UpdateRequest;
 use App\Models\Student;
 use App\Models\User;
-use DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
@@ -93,5 +94,24 @@ class StudentService
             throw new UserException('Không tìm thấy học sinh');
         }
         $user->delete();
+    }
+
+    public function getAllStudent(Request $request)
+    {
+        $status = $request->query('status');
+        $data = User::query()
+            ->whereHas('student')
+            ->with(['student:id,user_id'])
+            ->select('id', 'email', 'name', 'status');
+        if ($status) {
+            $data = $data->where('status', $status);
+        }
+        return $data->get()->map(function ($user) {
+            return [
+                'email' => $user->email,
+                'name' => $user->name,
+                'student_id' => $user->student->id,
+            ];
+        });
     }
 }

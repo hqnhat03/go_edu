@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillLevelController;
@@ -48,6 +49,7 @@ Route::middleware(['auth:api'])->prefix('/teachers')->group(function () {
 
 
 Route::middleware(['auth:api'])->prefix('/students')->group(function () {
+    Route::middleware(['permission:student_list'])->get('/all-students', [StudentController::class, 'getAllStudent']);
     Route::middleware(['permission:student_list'])->get('/', [StudentController::class, 'listStudent']);
     Route::middleware(['permission:student_create'])->post('/', [StudentController::class, 'createStudent']);
     Route::middleware(['permission:student_detail'])->get('/{id}', [StudentController::class, 'getStudent']);
@@ -74,4 +76,12 @@ Route::middleware(['auth:api'])->prefix('/roles')->group(function () {
     Route::middleware(['permission:role_create'])->post('/', [RoleController::class, 'createRole']);
     Route::middleware(['permission:role_edit'])->put('/{id}', [RoleController::class, 'updateRole']);
     Route::middleware(['permission:role_delete'])->delete('/{id}', [RoleController::class, 'deleteRole']);
+});
+
+Route::middleware(['auth:api'])->prefix('/guardians')->group(function () {
+    Route::middleware(['permission:guardian_list'])->get('/', [GuardianController::class, 'listGuardian']);
+    Route::middleware(['permission:guardian_create'])->post('/', [GuardianController::class, 'createGuardian']);
+    Route::middleware(['permission:guardian_detail'])->get('/{id}', [GuardianController::class, 'getGuardian']);
+    Route::middleware(['permission:guardian_edit'])->put('/{id}', [GuardianController::class, 'updateGuardian']);
+    Route::middleware(['permission:guardian_delete'])->delete('/{id}', [GuardianController::class, 'deleteGuardian']);
 });

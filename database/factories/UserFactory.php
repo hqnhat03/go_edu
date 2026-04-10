@@ -23,12 +23,24 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng"];
+        $tenDem = ["Văn", "Thị", "Hữu", "Quang", "Minh", "Đức", "Ngọc", "Thanh"];
+        $ten = ["An", "Bình", "Chi", "Dũng", "Hà", "Hải", "Hùng", "Lan", "Linh", "Trang", "Tuấn"];
+
+
         return [
-            'name' => fake()->name(),
+            'name' => fake()->randomElement($ho) . ' ' .
+                fake()->randomElement($tenDem) . ' ' .
+                fake()->randomElement($ten),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'gender' => fake()->randomElement(['male', 'female']),
+            'date_of_birth' => fake()->date('Y-m-d', '2000-01-01'),
+            'phone' => fake()->phoneNumber(),
+            'address' => fake()->address(),
+            'avatar' => 'https://i.pravatar.cc/150?u=' . fake()->numberBetween(1, 1000),
         ];
     }
 
@@ -37,7 +49,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

@@ -68,6 +68,11 @@ class PermissionSeeder extends Seeder
             'role_create',
             'role_edit',
             'role_delete',
+            'guardian_list',
+            'guardian_create',
+            'guardian_detail',
+            'guardian_edit',
+            'guardian_delete',
         ];
 
         foreach ($resources as $resource) {

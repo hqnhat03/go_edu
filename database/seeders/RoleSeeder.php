@@ -33,6 +33,7 @@ class RoleSeeder extends Seeder
         Role::create(['name' => 'guest']);
         Role::create(['name' => 'student']);
         Role::create(['name' => 'teacher']);
+        Role::create(['name' => 'guardian']);
         $admin->givePermissionTo([
             'teacher_create',
             'teacher_list',
@@ -85,6 +86,11 @@ class RoleSeeder extends Seeder
             'role_create',
             'role_edit',
             'role_delete',
+            'guardian_list',
+            'guardian_create',
+            'guardian_detail',
+            'guardian_edit',
+            'guardian_delete',
         ]);
         $superAdmin->syncPermissions(Permission::all());
         $adminUser->assignRole($admin);

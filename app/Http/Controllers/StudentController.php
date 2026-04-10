@@ -43,4 +43,10 @@ class StudentController extends Controller
         $this->studentService->deleteStudent($id);
         return ApiResponse::success(null, 'Xóa học sinh thành công');
     }
+
+    public function getAllStudent(Request $request)
+    {
+        $data = $this->studentService->getAllStudent($request);
+        return ApiResponse::success($data, 'Lấy danh sách học sinh thành công');
+    }
 }
