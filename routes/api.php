@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LevelController;
+use App\Http\Controllers\SkillLevelController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
@@ -57,4 +59,11 @@ Route::middleware(['auth:api'])->prefix('/subjects')->group(function () {
     Route::middleware(['permission:subject_create'])->post('/', [SubjectController::class, 'createSubject']);
     Route::middleware(['permission:subject_edit'])->put('/{id}', [SubjectController::class, 'updateSubject']);
     Route::middleware(['permission:subject_delete'])->delete('/{id}', [SubjectController::class, 'deleteSubject']);
+});
+
+Route::middleware(['auth:api'])->prefix('/levels')->group(function () {
+    Route::middleware(['permission:level_list'])->get('/', [LevelController::class, 'listLevel']);
+    Route::middleware(['permission:level_create'])->post('/', [LevelController::class, 'createLevel']);
+    Route::middleware(['permission:level_edit'])->put('/{id}', [LevelController::class, 'updateLevel']);
+    Route::middleware(['permission:level_delete'])->delete('/{id}', [LevelController::class, 'deleteLevel']);
 });
