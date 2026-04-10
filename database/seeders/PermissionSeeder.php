@@ -56,20 +56,15 @@ class PermissionSeeder extends Seeder
             'student_in_course_detail',
             'student_in_course_edit',
             'student_in_course_delete',
-            // ... thêm các màn hình khác từ ảnh của bạn
+            'subject_list',
+            'subject_edit',
+            'subject_create',
+            'subject_delete',
         ];
 
         foreach ($resources as $resource) {
             Permission::create(['name' => $resource, 'guard_name' => 'api']);
         }
 
-
-
-        // Tạo Role và gán quyền mẫu (giống trong ảnh)
-        // $superAdmin = Role::create(['name' => 'Super Admin', 'guard_name' => 'api']);
-        // $superAdmin->givePermissionTo(Permission::all());
-
-        // $admin = Role::create(['name' => 'Admin', 'guard_name' => 'api']);
-        // $admin->givePermissionTo(['dashboard', 'course_list', 'teacher_list']);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
@@ -49,4 +50,11 @@ Route::middleware(['auth:api'])->prefix('/students')->group(function () {
     Route::middleware(['permission:student_detail'])->get('/{id}', [StudentController::class, 'getStudent']);
     Route::middleware(['permission:student_edit'])->put('/{id}', [StudentController::class, 'editStudent']);
     Route::middleware(['permission:student_delete'])->delete('/{id}', [StudentController::class, 'deleteStudent']);
+});
+
+Route::middleware(['auth:api'])->prefix('/subjects')->group(function () {
+    Route::middleware(['permission:subject_list'])->get('/', [SubjectController::class, 'listSubject']);
+    Route::middleware(['permission:subject_create'])->post('/', [SubjectController::class, 'createSubject']);
+    Route::middleware(['permission:subject_edit'])->put('/{id}', [SubjectController::class, 'updateSubject']);
+    Route::middleware(['permission:subject_delete'])->delete('/{id}', [SubjectController::class, 'deleteSubject']);
 });
