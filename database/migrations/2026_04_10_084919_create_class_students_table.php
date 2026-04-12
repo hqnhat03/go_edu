@@ -10,12 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('levels', function (Blueprint $table) {
+        Schema::create('class_students', function (Blueprint $table) {
             $table->id();
-            $table->string('level');
-            $table->string('slug')->unique();
-            $table->enum('status', ['draft', 'published', 'archived'])->default('archived');
-            $table->string('education_level');
+            $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
+            $table->enum('status', ['enrolled', 'dropped', 'completed'])->default('enrolled');
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('levels');
+        Schema::dropIfExists('class_students');
     }
 };

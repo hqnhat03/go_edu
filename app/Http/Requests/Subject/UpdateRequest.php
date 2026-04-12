@@ -23,28 +23,19 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name" => [
-                "required",
-                "string",
-                "max:255",
-            ],
-            "training_level" => "required|string|max:255",
-            "category" => "required|string|max:255",
-            "student_type" => "required|in:student,employee",
-            "status" => "required|in:draft,published,archived",
+            'name' => 'required|string|max:255',
+            'category' => 'required|string',
+            'status' => 'required|in:draft,published,archived',
         ];
     }
 
     public function messages(): array
     {
         return [
-            "name.required" => "Tên môn học không được để trống",
-            "training_level.required" => "Trình độ đào tạo không được để trống",
-            "category.required" => "Danh mục không được để trống",
-            "student_type.required" => "Đối tượng học viên không được để trống",
-            "status.required" => "Trạng thái không được để trống",
-            "status.in" => "Trạng thái không hợp lệ",
-            "student_type.in" => "Đối tượng học viên không hợp lệ",
+            'name.required' => 'Tên môn học không được để trống',
+            'category.required' => 'Danh mục không được để trống',
+            'status.required' => 'Trạng thái không được để trống',
+            'status.in' => 'Trạng thái không hợp lệ',
         ];
     }
 }

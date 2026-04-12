@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Arr;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -75,9 +76,13 @@ class PermissionSeeder extends Seeder
             'guardian_delete',
         ];
 
-        foreach ($resources as $resource) {
-            Permission::create(['name' => $resource, 'guard_name' => 'api']);
-        }
 
+
+        Permission::insert(collect($resources)->map(function ($resource) {
+            return [
+                'name' => $resource,
+                'guard_name' => 'api',
+            ];
+        })->toArray());
     }
 }

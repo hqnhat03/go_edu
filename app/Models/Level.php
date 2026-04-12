@@ -10,15 +10,25 @@ class Level extends Model
     use HasFactory;
 
     protected $fillable = [
-        'subject_id',
         'level',
-        'level_normalized',
+        'slug',
         'status',
-        'created_by',
+        'education_level',
     ];
 
-    public function subject()
+    protected $hidden = [
+        'slug',
+        'created_at',
+        'updated_at',
+    ];
+
+    public function courses()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->hasMany(Course::class);
+    }
+
+    public function countCourses()
+    {
+        return $this->courses()->count();
     }
 }

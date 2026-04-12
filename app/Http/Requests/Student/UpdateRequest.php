@@ -27,7 +27,7 @@ class UpdateRequest extends FormRequest
             'phone' => 'required',
             'address' => 'required',
             'gender' => 'required',
-            'status' => 'required',
+            'status' => 'required|in:active,inactive',
             'day_of_birth' => 'required',
             'avatar' => 'nullable',
             "student_type" => 'required',
@@ -48,6 +48,7 @@ class UpdateRequest extends FormRequest
             'address.required' => 'Địa chỉ không được để trống',
             'gender.required' => 'Giới tính không được để trống',
             'status.required' => 'Trạng thái không được để trống',
+            'status.in' => 'Trạng thái không hợp lệ',
             'day_of_birth.required' => 'Ngày sinh không được để trống',
         ];
     }

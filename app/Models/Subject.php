@@ -10,11 +10,25 @@ class Subject extends Model
     use HasFactory;
 
     protected $fillable = [
-        "name",
-        "category",
-        "training_level",
-        "student_type",
-        "status",
-        "created_by"
+        'name',
+        'slug',
+        'category',
+        'status',
     ];
+
+    protected $hidden = [
+        'slug',
+        'created_at',
+        'updated_at',
+    ];
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
+
+    public function countCourses()
+    {
+        return $this->courses()->count();
+    }
 }

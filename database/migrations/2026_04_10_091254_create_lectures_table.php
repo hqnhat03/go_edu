@@ -10,12 +10,15 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('subjects', function (Blueprint $table) {
+        Schema::create('lectures', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('category');
-            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
+            $table->integer('duration_time');
+            $table->integer('lecture_number');
+            $table->string('document_url');
+            $table->string('video_url');
+            $table->text('description');
+            $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -25,6 +28,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('subjects');
+        Schema::dropIfExists('lectures');
     }
 };

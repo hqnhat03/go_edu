@@ -23,18 +23,18 @@ class CreateRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|unique:users,email',
             'phone' => 'required',
             'address' => 'required',
             'gender' => 'required',
-            'status' => 'required',
+            'status' => 'required|in:active,inactive',
             'day_of_birth' => 'required',
             'avatar' => 'nullable',
-            "student_type" => 'required',
-            "school" => 'nullable',
-            "grade" => 'nullable',
-            "work" => 'nullable',
-            "position" => 'nullable',
+            'student_type' => 'required',
+            'school' => 'nullable',
+            'grade' => 'nullable',
+            'work' => 'nullable',
+            'position' => 'nullable',
         ];
     }
 
@@ -43,11 +43,13 @@ class CreateRequest extends FormRequest
         return [
             'name.required' => 'Họ tên không được để trống',
             'email.required' => 'Email không được để trống',
+            'email.unique' => 'Email đã tồn tại',
             'email.email' => 'Email không hợp lệ',
             'phone.required' => 'Số điện thoại không được để trống',
             'address.required' => 'Địa chỉ không được để trống',
             'gender.required' => 'Giới tính không được để trống',
             'status.required' => 'Trạng thái không được để trống',
+            'status.in' => 'Trạng thái không hợp lệ',
             'day_of_birth.required' => 'Ngày sinh không được để trống',
         ];
     }

@@ -23,7 +23,7 @@ class CreateRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|unique:users,email',
             'phone' => 'required',
             'address' => 'required',
             'nationality' => 'required',
@@ -43,6 +43,7 @@ class CreateRequest extends FormRequest
         return [
             'name.required' => 'Họ tên không được để trống',
             'email.required' => 'Email không được để trống',
+            'email.unique' => 'Email đã tồn tại',
             'email.email' => 'Email không hợp lệ',
             'phone.required' => 'Số điện thoại không được để trống',
             'address.required' => 'Địa chỉ không được để trống',

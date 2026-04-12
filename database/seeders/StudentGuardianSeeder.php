@@ -16,35 +16,42 @@ class StudentGuardianSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-        for ($i = 0; $i < 20; $i++) {
-            $user = User::factory()->create();
-            $user->assignRole("student");
-            Student::factory()->create([
-                "user_id" => $user->id,
-            ]);
+
+        User::factory()->count(30)->create();
+        $userIds = DB::table('users')->latest('id')->limit(30)->pluck('id')->toArray();
+        $studentUserIds = array_slice($userIds, 0, 20);
+        $students = [];
+        foreach ($studentUserIds as $userId) {
+            $students[] = [
+                'user_id' => $userId,
+            ];
         }
+        Student::insert($students);
 
-        for ($i = 0; $i < 10; $i++) {
-            $user = User::factory()->create();
-            $user->assignRole("guardian");
-            Guardian::create([
-                "user_id" => $user->id,
-            ]);
+        $guardianUserIds = array_slice($userIds, 20, 10);
+        $guardians = [];
+        foreach ($guardianUserIds as $userId) {
+            $guardians[] = [
+                'user_id' => $userId,
+            ];
         }
+        Guardian::insert($guardians);
 
-        $guardians = Guardian::pluck('id')->toArray();
-        $students = Student::pluck('id')->toArray();
+        $studentIds = DB::table('students')->pluck('id')->toArray();
+        $guardianIds = DB::table('guardians')->pluck('id')->toArray();
 
-        foreach ($guardians as $guardianId) {
-            $randomStudents = collect($students)->random(rand(1, 2));
+        $pivot = [];
+        foreach ($guardianIds as $guardianId) {
+            $randomStudents = collect($studentIds)->random(rand(1, 2));
 
             foreach ($randomStudents as $studentId) {
-                DB::table('student_guardians')->insert([
+                $pivot[] = [
                     'guardian_id' => $guardianId,
                     'student_id' => $studentId,
-                ]);
+                ];
             }
         }
+        DB::table('student_guardians')->insert($pivot);
+
     }
 }

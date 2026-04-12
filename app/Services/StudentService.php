@@ -3,115 +3,201 @@
 namespace App\Services;
 
 use App\Exceptions\UserException;
-use App\Http\Requests\Student\CreateRequest;
-use App\Http\Requests\Student\UpdateRequest;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
-    public function createStudent(CreateRequest $request)
+    public function createStudent(array $data)
     {
-        $data = $request->validated();
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => 'password123',
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'gender' => $data['gender'],
-            'status' => $data['status'],
-            'date_of_birth' => $data['day_of_birth'],
-            'avatar' => $data['avatar'],
-        ]);
-        $user->assignRole('student');
-        $user->student()->create([
-            'student_type' => $data['student_type'],
-            'school' => $data['school'],
-            'grade' => $data['grade'],
-            'work' => $data['work'],
-            'position' => $data['position'],
-        ]);
-        return $user->load('student')->toArray();
+        try {
+            $user = DB::transaction(function () use ($data) {
+
+                $user = User::create([
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'password' => bcrypt('password123'),
+                    'phone' => $data['phone'],
+                    'address' => $data['address'],
+                    'gender' => $data['gender'],
+                    'status' => $data['status'],
+                    'date_of_birth' => $data['day_of_birth'],
+                    'avatar' => $data['avatar'],
+                ]);
+
+                $user->assignRole('student');
+
+                $user->student()->create([
+                    'student_type' => $data['student_type'],
+                    'school' => $data['school'],
+                    'grade' => $data['grade'],
+                    'work' => $data['work'],
+                    'position' => $data['position'],
+                ]);
+
+                return $user; // ✅ phải return trong transaction
+            });
+
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                throw new UserException("Email đã tồn tại");
+            }
+            throw $e;
+        }
+        return [
+            ...$user->only([
+                'name',
+                'email',
+                'phone',
+                'status',
+                'avatar'
+            ]),
+            ...$user->student->only([
+                'id',
+                'student_type',
+            ])
+        ];
+
+
     }
 
-    public function listStudent()
+    public function listStudent(array $param)
     {
-        $data = User::whereHas('student')->get();
-        return $data;
+        $student = Student::query()->join('users', 'users.id', '=', 'students.user_id');
+
+        if (isset($param['q'])) {
+            $student->where('users.name', 'like', '%' . $param['q'] . '%')
+                ->orWhere('users.email', 'like', '%' . $param['q'] . '%');
+        }
+
+        if (isset($param['status'])) {
+            $student->where('users.status', $param['status']);
+        }
+
+        if (isset($param['student_type'])) {
+            $student->where('student_type', $param['student_type']);
+        }
+
+        return $student->select([
+            'students.id',
+            'students.student_type',
+            'users.name',
+            'users.email',
+            'users.phone',
+            'users.status',
+            'users.avatar'
+        ])->get();
     }
 
-    public function updateStudent(UpdateRequest $request, $id)
+    public function updateStudent(array $data, $id)
     {
-        $data = $request->validated();
-        $user = User::findOrFail($id);
-        if (!$user->student) {
+        $student = Student::with('user')->findOrFail($id);
+        if (!$student->user) {
             throw new UserException('Không tìm thấy học sinh');
         }
-        return DB::transaction(function () use ($user, $data) {
-            // Cập nhật bảng users
-            $user->update([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'phone' => $data['phone'],
-                'address' => $data['address'],
-                'gender' => $data['gender'],
-                'status' => $data['status'],
-                'date_of_birth' => $data['day_of_birth'],
-                'avatar' => $data['avatar'],
-            ]);
+        try {
+            $student = DB::transaction(function () use ($student, $data) {
+                $student->user->update([
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'password' => bcrypt('password123'),
+                    'phone' => $data['phone'],
+                    'address' => $data['address'],
+                    'gender' => $data['gender'],
+                    'status' => $data['status'],
+                    'date_of_birth' => $data['day_of_birth'],
+                    'avatar' => $data['avatar'],
+                ]);
 
-            // Cập nhật bảng teachers (thông qua relationship)
-            // Lưu ý: Đảm bảo $data chứa các trường của bảng teacher
-            $user->student()->update([
-                'student_type' => $data['student_type'],
-                'school' => $data['school'],
-                'grade' => $data['grade'],
-                'work' => $data['work'],
-                'position' => $data['position'],
-            ]);
+                $student->update([
+                    'student_type' => $data['student_type'],
+                    'school' => $data['school'],
+                    'grade' => $data['grade'],
+                    'work' => $data['work'],
+                    'position' => $data['position'],
+                ]);
 
-            return $user->load('student');
-        });
+                return $student;
+            });
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                throw new UserException("Email đã tồn tại");
+            }
+            throw $e;
+        }
+
+        return [
+            ...$student->only([
+                'id',
+                'student_type',
+                'school',
+                'grade',
+                'work',
+                'position'
+            ]),
+            ...$student->user->only([
+                'name',
+                'email',
+                'gender',
+                'status',
+                'phone',
+                'date_of_birth',
+                'address',
+                'avatar'
+            ])
+        ];
     }
 
     public function getStudent($id)
     {
 
-        $user = User::findOrFail($id);
-        if (!$user->student) {
+        $student = Student::with('user')->findOrFail($id);
+        if (!$student) {
             throw new UserException('Không tìm thấy học sinh');
         }
-        return $user->load('student');
+        return [
+            ...$student->only([
+                'id',
+                'student_type',
+                'school',
+                'grade',
+                'work',
+                'position'
+            ]),
+            ...$student->user->only([
+                'name',
+                'email',
+                'gender',
+                'status',
+                'phone',
+                'date_of_birth',
+                'address',
+                'avatar'
+            ])
+        ];
     }
 
     public function deleteStudent($id)
     {
-        $user = User::findOrFail($id);
-        if (!$user->student) {
+        $student = Student::with('user')->findOrFail($id);
+        if (!$student) {
             throw new UserException('Không tìm thấy học sinh');
         }
-        $user->delete();
+        $student->user->delete();
+        return $student->id;
     }
 
     public function getAllStudent(Request $request)
     {
         $status = $request->query('status');
-        $data = User::query()
-            ->whereHas('student')
-            ->with(['student:id,user_id'])
-            ->select('id', 'email', 'name', 'status');
+        $students = Student::query()->join('users', 'users.id', '=', 'students.user_id')
+            ->select('students.id', 'users.email', 'users.name', 'users.status');
         if ($status) {
-            $data = $data->where('status', $status);
+            $students = $students->where('users.status', $status);
         }
-        return $data->get()->map(function ($user) {
-            return [
-                'email' => $user->email,
-                'name' => $user->name,
-                'student_id' => $user->student->id,
-            ];
-        });
+        return $students->get();
     }
 }

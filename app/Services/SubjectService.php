@@ -7,52 +7,61 @@ use App\Http\Requests\Subject\CreateRequest;
 use App\Http\Requests\Subject\UpdateRequest;
 use App\Models\Subject;
 use Illuminate\Database\QueryException;
+use Str;
 
 class SubjectService
 {
-    function listSubject()
+    function listSubject(array $params)
     {
-        return Subject::query()
-            ->whereIn("status", ["published", "archived"])
-            ->orWhere("created_by", auth()->id())
-            ->get(["id", "name", "category", "training_level", "student_type", "status"]);
+        $query = Subject::query();
+
+        if (isset($params['name'])) {
+            $query->where('name', 'like', '%' . $params['name'] . '%');
+        }
+
+        if (isset($params['status'])) {
+            $query->where('status', $params['status']);
+        }
+
+        if (isset($params['category'])) {
+            $query->where('category', $params['category']);
+        }
+        return $query->get();
     }
 
-    function createSubject(CreateRequest $request)
+
+
+    function createSubject(array $data)
     {
         try {
-            $data = $request->validated();
             return Subject::create([
-                "name" => $data["name"],
-                "category" => $data["category"],
-                "training_level" => $data["training_level"],
-                "student_type" => $data["student_type"],
-                "status" => $data["status"],
-                "created_by" => auth()->id(),
+                'name' => $data['name'],
+                'slug' => Str::slug($data['name']),
+                'category' => $data['category'],
+                'status' => $data['status'],
+                'created_by' => auth()->id(),
             ]);
         } catch (QueryException $e) {
             if ($e->getCode() == 23000) {
-                throw new UserException("Tên môn học và trình độ đào tạo đã tồn tại");
+                throw new UserException('Tên môn học đã tồn tại');
             }
             throw $e;
         }
     }
 
-    function updateSubject(UpdateRequest $request, $id)
+    function updateSubject(array $data, $id)
     {
-        $data = $request->validated();
+        $subject = Subject::findOrFail($id);
         try {
-            $subject = Subject::findOrFail($id);
             $subject->update([
-                "name" => $data["name"],
-                "category" => $data["category"],
-                "training_level" => $data["training_level"],
-                "student_type" => $data["student_type"],
-                "status" => $data["status"],
+                'name' => $data['name'],
+                'slug' => Str::slug($data['name']),
+                'category' => $data['category'],
+                'status' => $data['status'],
             ]);
         } catch (QueryException $e) {
             if ($e->getCode() == 23000) {
-                throw new UserException("Tên môn học và trình độ đào tạo đã tồn tại");
+                throw new UserException('Tên môn học đã tồn tại');
             }
             throw $e;
         }
@@ -62,6 +71,10 @@ class SubjectService
     function deleteSubject($id)
     {
         $subject = Subject::findOrFail($id);
+        if ($subject->countCourses() > 0) {
+            throw new UserException('Không thể xóa môn học đã có khóa học');
+        }
         $subject->delete();
+        return $subject->id;
     }
 }

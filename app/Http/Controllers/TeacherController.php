@@ -10,37 +10,39 @@ use Illuminate\Http\Request;
 
 class TeacherController extends Controller
 {
-    public function __construct(private TeacherService $teacherService)
+    private TeacherService $teacherService;
+    public function __construct(TeacherService $teacherService)
     {
+        $this->teacherService = $teacherService;
     }
 
-    public function createTeacher(CreateRequest $request)
+    public function index(Request $request)
     {
-        $data = $this->teacherService->createTeacher($request);
-        return ApiResponse::success($data, "Tạo giáo viên thành công", [], 201);
-    }
-
-    public function listTeacher()
-    {
-        $data = $this->teacherService->listTeacher();
+        $data = $this->teacherService->listTeacher($request->all());
         return ApiResponse::success($data);
     }
 
-    public function editTeacher(UpdateRequest $request, $id)
+    public function store(CreateRequest $request)
     {
-        $data = $this->teacherService->updateTeacher($request, $id);
-        return ApiResponse::success($data, "Sửa giáo viên thành công");
+        $data = $this->teacherService->createTeacher($request->validated());
+        return ApiResponse::success($data, "Tạo giáo viên thành công", [], 201);
     }
 
-    public function getTeacher($id)
+    public function update(UpdateRequest $request, $id)
+    {
+        $data = $this->teacherService->updateTeacher($request->validated(), $id);
+        return ApiResponse::success($data, "Cập nhật giáo viên thành công");
+    }
+
+    public function show($id)
     {
         $data = $this->teacherService->getTeacher($id);
         return ApiResponse::success($data);
     }
 
-    public function deleteTeacher($id)
+    public function destroy($id)
     {
-        $this->teacherService->deleteTeacher($id);
-        return ApiResponse::success(null, 'Xóa giáo viên thành công');
+        $data = $this->teacherService->deleteTeacher($id);
+        return ApiResponse::success($data, 'Xóa giáo viên thành công');
     }
 }

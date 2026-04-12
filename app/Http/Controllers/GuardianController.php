@@ -17,31 +17,31 @@ class GuardianController extends Controller
         $this->guardianService = $guardianService;
     }
 
-    public function listGuardian(Request $request)
+    public function index(Request $request)
     {
-        $data = $this->guardianService->listGuardian($request);
+        $data = $this->guardianService->listGuardian($request->all());
         return ApiResponse::success($data, "Lấy danh sách người giám hộ thành công");
     }
 
-    public function createGuardian(CreateRequest $request)
+    public function store(CreateRequest $request)
     {
-        $data = $this->guardianService->createGuardian($request);
+        $data = $this->guardianService->createGuardian($request->validated());
         return ApiResponse::success($data, "Thêm người giám hộ thành công");
     }
 
-    public function getGuardian($id)
+    public function show($id)
     {
         $data = $this->guardianService->getGuardian($id);
         return ApiResponse::success($data, "Lấy thông tin người giám hộ thành công");
     }
 
-    public function updateGuardian(UpdateRequest $request, $id)
+    public function update(UpdateRequest $request, $id)
     {
-        $data = $this->guardianService->updateGuardian($request, $id);
+        $data = $this->guardianService->updateGuardian($request->validated(), $id);
         return ApiResponse::success($data, "Cập nhật thông tin người giám hộ thành công");
     }
 
-    public function deleteGuardian($id)
+    public function destroy($id)
     {
         $data = $this->guardianService->deleteGuardian($id);
         return ApiResponse::success($data, "Xóa người giám hộ thành công");

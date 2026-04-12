@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-class Teacher extends User
+use Illuminate\Database\Eloquent\Model;
+
+class Teacher extends Model
 {
     /**
      * Các trường có thể được gán hàng loạt (mass assignable).
@@ -36,5 +38,10 @@ class Teacher extends User
 
         // Nếu 1 lớp có nhiều giáo viên và 1 giáo viên dạy nhiều lớp (many-to-many):
         // return $this->belongsToMany(Classroom::class, 'class_teacher', 'teacher_id', 'class_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -22,22 +22,21 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'subject_id' => 'required|exists:subjects,id',
             'level' => 'required|string|max:255',
             'status' => 'required|in:draft,published,archived',
+            'education_level' => 'required',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'subject_id.required' => 'Subject ID is required',
-            'subject_id.exists' => 'Subject ID does not exist',
-            'level.required' => 'Level is required',
-            'level.string' => 'Level must be a string',
-            'level.max' => 'Level must be at most 255 characters',
-            'status.required' => 'Status is required',
-            'status.in' => 'Status must be draft, published, or archived',
+            'level.required' => 'Trình độ là bắt buộc',
+            'level.string' => 'Trình độ phải là chuỗi',
+            'level.max' => 'Trình độ phải có tối đa 255 ký tự',
+            'status.required' => 'Trạng thái là bắt buộc',
+            'status.in' => 'Trạng thái không hợp lệ',
+            'education_level.required' => 'Trình độ đào tạo là bắt buộc',
         ];
     }
 }

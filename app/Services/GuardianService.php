@@ -15,68 +15,85 @@ use Str;
 class GuardianService
 {
 
-    public function createGuardian(CreateRequest $request)
+    public function createGuardian(array $data)
     {
-        $data = $request->validated();
-        return DB::transaction(function () use ($data) {
-            $password = Str::random(8);
-            $user = User::create([
-                "name" => $data["name"],
-                "email" => $data["email"],
-                "password" => $password,
-                'phone' => $data['phone'],
-                'address' => $data['address'],
-                'gender' => $data['gender'],
-                'status' => $data['status'],
-                'date_of_birth' => $data['day_of_birth'],
-                'avatar' => $data['avatar'],
-            ]);
-            $user->assignRole('guardian');
-            $user->guardian()->create();
-            $user->guardian->students()->sync($data['student_ids']);
+        try {
+            $guardian = DB::transaction(function () use ($data) {
+                $password = Str::random(8);
+                $user = User::create([
+                    "name" => $data["name"],
+                    "email" => $data["email"],
+                    "password" => $password,
+                    'phone' => $data['phone'],
+                    'address' => $data['address'],
+                    'gender' => $data['gender'],
+                    'status' => $data['status'],
+                    'date_of_birth' => $data['day_of_birth'],
+                    'avatar' => $data['avatar'],
+                ]);
+                $user->assignRole('guardian');
+                $guardian = $user->guardian()->create();
+                $guardian->students()->sync($data['student_ids']);
+                return $guardian;
+            });
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == '1452') {
+                throw new UserException("Học sinh không tồn tại");
+            }
+            throw $e;
+        }
+        return [
+            ...$guardian->only(['id']),
+            ...$guardian->user->only(['name', 'email', 'phone', 'status', 'avatar']),
+            'students' => $guardian->students->map(function ($s) {
+                return [
+                    'student_id' => $s->id,
+                    'name' => $s->user->name,
+                ];
+            })->values()
+        ];
+    }
 
+    public function listGuardian(array $params)
+    {
+        $query = Guardian::query()->join('users', 'guardians.user_id', '=', 'users.id')
+            ->join('student_guardians', 'guardians.id', '=', 'student_guardians.guardian_id')
+            ->join('students', 'student_guardians.student_id', '=', 'students.id');
+
+        if (isset($params['q'])) {
+            $query->where('users.name', 'like', '%' . $params['q'] . '%')
+                ->orWhere('users.email', 'like', '%' . $params['q'] . '%')
+                ->orWhere('phone', 'like', '%' . $params['q'] . '%');
+        }
+
+        if (isset($params['status'])) {
+            $query->where('users.status', $params['status']);
+        }
+
+        return $query->get()->map(function ($guardian) {
             return [
-                'id' => $user->guardian->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'students' => $user->guardian->students->map(function ($s) {
+                'id' => $guardian->id,
+                'name' => $guardian->user->name,
+                'email' => $guardian->user->email,
+                'phone' => $guardian->user->phone,
+                'status' => $guardian->user->status,
+                'avatar' => $guardian->user->avatar,
+                'students' => $guardian->students->map(function ($student) {
                     return [
-                        'student_id' => $s->id,
-                        'name' => $s->user->name,
+                        'id' => $student->id,
+                        'name' => $student->user->name,
+                        'email' => $student->user->email,
                     ];
-                })->values()
+                })
             ];
         });
     }
 
-    public function listGuardian(Request $request)
+    public function updateGuardian(array $data, $id)
     {
-        $data = User::whereHas('guardian')->get()->map(function ($user) {
-            return [
-                'id' => $user->guardian->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'status' => $user->status,
-                'students' => $user->guardian->students->map(function ($s) {
-                    return [
-                        'student_id' => $s->id,
-                        'name' => $s->user->name,
-                    ];
-                })->values()
-            ];
-        });
-        return $data;
-    }
-
-    public function updateGuardian(UpdateRequest $request, $id)
-    {
-        $data = $request->validated();
-        $guardian = Guardian::findOrFail($id);
-        return DB::transaction(function () use ($guardian, $data) {
-            // Cập nhật bảng users
-            try {
+        $guardian = Guardian::with('user', 'students')->findOrFail($id);
+        try {
+            $guardian = DB::transaction(function () use ($guardian, $data) {
                 $guardian->user->update([
                     'name' => $data['name'],
                     'email' => $data['email'],
@@ -87,47 +104,36 @@ class GuardianService
                     'date_of_birth' => $data['day_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
-            } catch (QueryException $e) {
-                if ($e->getCode() == 23000) {
-                    throw new UserException("Email already exists");
-                }
+                $guardian->students()->sync($data['student_ids']);
+                return $guardian;
+            });
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == '1452') {
+                throw new UserException("Học sinh không tồn tại");
             }
-
-            $guardian->students()->sync($data['student_ids']);
-
-            return [
-                'id' => $guardian->id,
-                'name' => $guardian->user->name,
-                'email' => $guardian->user->email,
-                'avatar' => $guardian->user->avatar,
-                'status' => $guardian->user->status,
-                'gender' => $guardian->user->gender,
-                'phone' => $guardian->user->phone,
-                'address' => $guardian->user->address,
-                'date_of_birth' => $guardian->user->date_of_birth,
-                'students' => $guardian->students->map(function ($s) {
-                    return [
-                        'student_id' => $s->id,
-                        'name' => $s->user->name,
-                    ];
-                })->values()
-            ];
-        });
+            if ($e->errorInfo[1] == '1062') {
+                throw new UserException("Email đã tồn tại");
+            }
+            throw $e;
+        }
+        return [
+            ...$guardian->only('id'),
+            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar'),
+            'students' => $guardian->students->map(function ($s) {
+                return [
+                    'student_id' => $s->id,
+                    'name' => $s->user->name,
+                ];
+            })->values()
+        ];
     }
 
     public function getGuardian($id)
     {
-        $guardian = Guardian::findOrFail($id);
+        $guardian = Guardian::with('user', 'students')->findOrFail($id);
         return [
-            'id' => $guardian->id,
-            'name' => $guardian->user->name,
-            'email' => $guardian->user->email,
-            'avatar' => $guardian->user->avatar,
-            'status' => $guardian->user->status,
-            'gender' => $guardian->user->gender,
-            'phone' => $guardian->user->phone,
-            'address' => $guardian->user->address,
-            'date_of_birth' => $guardian->user->date_of_birth,
+            ...$guardian->only('id'),
+            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar'),
             'students' => $guardian->students->map(function ($s) {
                 return [
                     'student_id' => $s->id,
@@ -140,8 +146,8 @@ class GuardianService
 
     public function deleteGuardian($id)
     {
-        $guardian = Guardian::findOrFail($id);
-        $guardian->delete();
+        $guardian = Guardian::with('user')->findOrFail($id);
+        $guardian->user->delete();
         return $guardian->id;
     }
 

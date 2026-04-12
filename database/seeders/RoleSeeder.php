@@ -16,6 +16,21 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
 
+        $roles = [
+            'super_admin',
+            'admin',
+            'guest',
+            'student',
+            'teacher',
+            'guardian',
+        ];
+        Role::insert(collect($roles)->map(function ($role) {
+            return [
+                'name' => $role,
+                'guard_name' => 'api',
+            ];
+        })->toArray());
+
         $adminUser = User::create([
             'name' => 'admin',
             'email' => 'admin@gmail.com',
@@ -27,13 +42,9 @@ class RoleSeeder extends Seeder
             'password' => 'password'
         ]);
 
+        $admin = Role::where('name', 'admin')->first();
+        $superAdmin = Role::where('name', 'super_admin')->first();
 
-        $superAdmin = Role::create(['name' => 'super_admin']);
-        $admin = Role::create(['name' => 'admin']);
-        Role::create(['name' => 'guest']);
-        Role::create(['name' => 'student']);
-        Role::create(['name' => 'teacher']);
-        Role::create(['name' => 'guardian']);
         $admin->givePermissionTo([
             'teacher_create',
             'teacher_list',

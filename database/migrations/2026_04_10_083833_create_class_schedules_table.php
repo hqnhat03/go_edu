@@ -10,12 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('levels', function (Blueprint $table) {
+        Schema::create('class_schedules', function (Blueprint $table) {
             $table->id();
-            $table->string('level');
-            $table->string('slug')->unique();
-            $table->enum('status', ['draft', 'published', 'archived'])->default('archived');
-            $table->string('education_level');
+            $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();
+            $table->enum('day_of_week', ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+            $table->time('start_time');
+            $table->time('end_time');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('levels');
+        Schema::dropIfExists('class_schedules');
     }
 };
