@@ -12,66 +12,56 @@ class ClassRoomService
 {
     public function getList(array $params)
     {
-        $query = ClassRoom::query()->join('courses', 'class_rooms.course_id', '=', 'courses.id')
-            ->join('class_teachers', 'class_rooms.id', '=', 'class_teachers.class_id')
-            ->leftJoin('class_students', 'class_rooms.id', '=', 'class_students.class_id')
-            ->leftJoin('teachers', 'class_teachers.teacher_id', '=', 'teachers.id')
-            ->join('users', 'teachers.user_id', '=', 'users.id');
+        $query = ClassRoom::query()
+            ->has('course')
+            ->has('teachers');
 
         if (isset($params['course_id'])) {
-            $query->where('class_rooms.course_id', $params['course_id']);
+            $query->where('course_id', $params['course_id']);
         }
 
         if (isset($params['start_day'])) {
-            $query->where('class_rooms.start_day', '>=', $params['start_day']);
+            $query->where('start_day', '>=', $params['start_day']);
         }
+
         if (isset($params['end_day'])) {
-            $query->where('class_rooms.end_day', '<=', $params['end_day']);
+            $query->where('end_day', '<=', $params['end_day']);
         }
 
         if (isset($params['class_code'])) {
-            $query->where('class_rooms.class_code', 'like', '%' . $params['class_code'] . '%');
+            $query->where('class_code', 'like', '%' . $params['class_code'] . '%');
         }
 
         if (isset($params['status'])) {
-            $query->where('class_rooms.status', $params['status']);
+            $query->where('status', $params['status']);
         }
 
         if (isset($params['teacher_name'])) {
-            $query->where('users.name', 'like', '%' . $params['teacher_name'] . '%');
+            $query->whereHas('teachers.user', function ($q) use ($params) {
+                $q->where('name', 'like', '%' . $params['teacher_name'] . '%');
+            });
         }
 
-        $data = $query->select([
-            'class_rooms.id',
-            'class_rooms.class_code',
-            'class_rooms.start_day',
-            'class_rooms.end_day',
-            'class_rooms.status',
-            'users.name as teacher_name',
-            'class_students.student_id',
-            'teachers.id as teacher_id',
-        ])->get();
+        $data = $query->with(['teachers.user'])
+            ->withCount('students')
+            ->get();
 
-        $result = $data->groupBy('id')->map(function ($items) {
-            $class = $items->first();
-
+        return $data->map(function ($class) {
             return [
                 'id' => $class->id,
                 'class_code' => $class->class_code,
                 'start_day' => $class->start_day,
                 'end_day' => $class->end_day,
                 'status' => $class->status,
-                'teachers' => $items->map(function ($item) {
+                'teachers' => $class->teachers->map(function ($teacher) {
                     return [
-                        'id' => $item->teacher_id,
-                        'name' => $item->teacher_name,
+                        'id' => $teacher->id,
+                        'name' => $teacher->user->name,
                     ];
-                })->unique()->values(),
-                'student_count' => $items->pluck('student_id')->unique()->count(),
+                }),
+                'student_count' => $class->students_count,
             ];
-        })->values();
-
-        return $result;
+        });
     }
 
     public function findById(int $id)

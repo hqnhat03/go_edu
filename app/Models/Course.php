@@ -39,20 +39,13 @@ class Course extends Model
         return $this->belongsTo(Subject::class);
     }
 
+    public function materials()
+    {
+        return $this->hasMany(CourseMaterial::class, 'course_id', 'id');
+    }
+
     public function classRooms()
     {
         return $this->hasMany(ClassRoom::class);
     }
-
-    public function classRoomsCount()
-    {
-        return $this->hasMany(ClassRoom::class)->count();
-    }
-
-    public function courseMarterials()
-    {
-        return DB::table('course_marterials')->where('course_id', $this->id)->get();
-    }
-
-
 }
