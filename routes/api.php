@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\LevelController;
@@ -113,6 +114,9 @@ Route::middleware(['auth:api'])->prefix('/news')->group(function () {
     Route::middleware(['permission:news_edit'])->put('/{id}', [NewController::class, 'update']);
     Route::middleware(['permission:news_delete'])->delete('/{id}', [NewController::class, 'destroy']);
 });
+
+Route::middleware(['auth:api'])->get('/dashboard', [DashboardController::class, 'index']);
+
 
 
 Route::get('/filters', [FilterController::class, 'index']);
