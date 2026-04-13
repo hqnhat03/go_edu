@@ -31,6 +31,9 @@ class CreateRequest extends FormRequest
             'completion_time' => 'required|integer|min:1',
             'image_url' => 'string',
             'level_id' => 'required|exists:levels,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'class_rooms' => 'array',
+            'course_marterials' => 'array'
         ];
     }
 
@@ -44,6 +47,9 @@ class CreateRequest extends FormRequest
             'lesson_count.required' => 'Số lượng bài học không được để trống',
             'completion_time.required' => 'Thời gian hoàn thành không được để trống',
             'level_id.required' => 'Level không được để trống',
+            'subject_id.required' => 'Môn học không được để trống',
+            'class_rooms.array' => 'Lớp học phải là một mảng',
+            'course_marterials.array' => 'Tài liệu khóa học phải là một mảng',
         ];
     }
 }

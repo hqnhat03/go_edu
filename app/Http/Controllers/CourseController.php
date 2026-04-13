@@ -23,85 +23,32 @@ class CourseController extends Controller
 
     public function index(Request $request)
     {
-        $courses = $this->courseService->listCourse($request->all());
+        $courses = $this->courseService->getList($request->all());
         return ApiResponse::success($courses, 'Lấy danh sách khóa học thành công');
     }
 
-    public function show(Course $course): JsonResponse
+    public function show($id)
     {
-        $course->load('level', 'classRooms.schedules');
-
-        return response()->json([
-            'success' => true,
-            'data' => new CourseResource($course),
-        ]);
+        $course = $this->courseService->findById($id);
+        return ApiResponse::success($course, 'Lấy thông tin khóa học thành công');
     }
 
     public function store(CreateRequest $request): JsonResponse
     {
-        DB::beginTransaction();
-        try {
-            $course = $this->courseService->create($request->validated());
-            DB::commit();
+        $course = $this->courseService->create($request->validated());
+        return ApiResponse::success($course, 'Tạo khóa học thành công');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Tạo khóa học thành công',
-                'data' => new CourseResource($course),
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Tạo khóa học thất bại',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
     }
 
-    public function update(UpdateRequest $request, Course $course): JsonResponse
+    public function update(UpdateRequest $request, int $id): JsonResponse
     {
-        DB::beginTransaction();
-        try {
-            $course = $this->courseService->update($course, $request->validated());
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Cập nhật khóa học thành công',
-                'data' => new CourseResource($course),
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Cập nhật khóa học thất bại',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        $course = $this->courseService->update($request->validated(), $id);
+        return ApiResponse::success($course, 'Cập nhật khóa học thành công');
     }
 
-    public function destroy(Course $course): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        DB::beginTransaction();
-        try {
-            $this->courseService->delete($course);
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Xóa khóa học thành công',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Xóa khóa học thất bại',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        $course = $this->courseService->delete($id);
+        return ApiResponse::success($course, 'Xóa khóa học thành công');
     }
 }
