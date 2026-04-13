@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\LevelController;
+use App\Http\Controllers\NewController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillLevelController;
 use App\Http\Controllers\StudentController;
@@ -103,6 +104,14 @@ Route::middleware(['auth:api'])->prefix('/classes')->group(function () {
     Route::middleware(['permission:class_detail'])->get('/{id}', [ClassRoomController::class, 'show']);
     Route::middleware(['permission:class_edit'])->put('/{id}', [ClassRoomController::class, 'update']);
     Route::middleware(['permission:class_delete'])->delete('/{id}', [ClassRoomController::class, 'destroy']);
+});
+
+Route::middleware(['auth:api'])->prefix('/news')->group(function () {
+    Route::middleware(['permission:news_list'])->get('/', [NewController::class, 'index']);
+    Route::middleware(['permission:news_create'])->post('/', [NewController::class, 'store']);
+    Route::middleware(['permission:news_detail'])->get('/{id}', [NewController::class, 'show']);
+    Route::middleware(['permission:news_edit'])->put('/{id}', [NewController::class, 'update']);
+    Route::middleware(['permission:news_delete'])->delete('/{id}', [NewController::class, 'destroy']);
 });
 
 

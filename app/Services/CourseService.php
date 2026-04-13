@@ -14,25 +14,37 @@ class CourseService
 {
     public function getList(array $params)
     {
-        return Course::query()
-            ->with(['level', 'subject'])
-            // Maintain inner join behavior if needed, otherwise remove has()
-            ->has('level')
-            ->has('subject')
-            ->when($params['name'] ?? null, fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
-            ->when($params['status'] ?? null, fn($q, $status) => $q->where('status', $status))
-            ->when($params['target_student'] ?? null, fn($q, $target) => $q->where('target_student', $target))
-            ->when($params['subject'] ?? null, fn($q, $subjectId) => $q->where('subject_id', $subjectId))
-            ->when($params['level'] ?? null, fn($q, $levelId) => $q->where('level_id', $levelId))
-            ->get()
-            ->map(fn($course) => [
-                'id' => $course->id,
-                'name' => $course->name,
-                'status' => $course->status,
-                'target_student' => $course->target_student,
-                'level_name' => $course->level->level,
-                'subject_name' => $course->subject->name,
-            ]);
+        $query = Course::query()->join('levels', 'courses.level_id', '=', 'levels.id')
+            ->join('subjects', 'courses.subject_id', '=', 'subjects.id');
+
+        if (isset($params['name'])) {
+            $query->where('courses.name', 'like', '%' . $params['name'] . '%');
+        }
+
+        if (isset($params['status'])) {
+            $query->where('courses.status', $params['status']);
+        }
+
+        if (isset($params['target_student'])) {
+            $query->where('courses.target_student', $params['target_student']);
+        }
+
+        if (isset($params['subject'])) {
+            $query->where('subjects.id', $params['subject']);
+        }
+
+        if (isset($params['level'])) {
+            $query->where('levels.id', $params['level']);
+        }
+
+        return $query->select([
+            'courses.id',
+            'courses.name',
+            'courses.status',
+            'courses.target_student',
+            'levels.level as level_name',
+            'subjects.name as subject_name'
+        ])->get();
     }
 
     public function findById(int $id)
