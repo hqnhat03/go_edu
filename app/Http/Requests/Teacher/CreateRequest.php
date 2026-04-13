@@ -30,7 +30,7 @@ class CreateRequest extends FormRequest
             'gender' => 'required',
             'expertise' => 'required',
             'experience' => 'required|numeric',
-            'target_student_type' => 'required',
+            'target_student' => 'required',
             'status' => 'required',
             'day_of_birth' => 'required',
             'avatar' => 'nullable',

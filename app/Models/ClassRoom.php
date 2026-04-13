@@ -23,4 +23,19 @@ class ClassRoom extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+    public function teachers()
+    {
+        return $this->belongsToMany(Teacher::class, 'class_teachers', 'class_id', 'teacher_id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'class_students', 'class_id', 'student_id');
+    }
+
+    public function schedules()
+    {
+        // return $this->hasMany(::class);
+    }
 }

@@ -12,12 +12,12 @@ return new class extends Migration {
     {
         Schema::create('class_rooms', function (Blueprint $table) {
             $table->id();
-            $table->string('class_code');
+            $table->string('class_code')->unique();
             $table->date('start_day');
             $table->date('end_day');
             $table->integer('max_student');
             $table->string('meeting_url')->nullable();
-            $table->enum('status', ['open', 'closed', 'cancelled'])->default('open');
+            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
             $table->foreignId('course_id')->constrained('courses')->cascadeOnDelete();
             $table->timestamps();
         });

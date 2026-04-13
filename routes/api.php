@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GuardianController;
@@ -95,5 +96,14 @@ Route::middleware(['auth:api'])->prefix('/courses')->group(function () {
     Route::middleware(['permission:course_edit'])->put('/{id}', [CourseController::class, 'update']);
     Route::middleware(['permission:course_delete'])->delete('/{id}', [CourseController::class, 'destroy']);
 });
+
+Route::middleware(['auth:api'])->prefix('/classes')->group(function () {
+    Route::middleware(['permission:class_list'])->get('/', [ClassRoomController::class, 'index']);
+    Route::middleware(['permission:class_create'])->post('/', [ClassRoomController::class, 'store']);
+    Route::middleware(['permission:class_detail'])->get('/{id}', [ClassRoomController::class, 'show']);
+    Route::middleware(['permission:class_edit'])->put('/{id}', [ClassRoomController::class, 'update']);
+    Route::middleware(['permission:class_delete'])->delete('/{id}', [ClassRoomController::class, 'destroy']);
+});
+
 
 Route::get('/filters', [FilterController::class, 'index']);

@@ -15,7 +15,8 @@ class Teacher extends Model
         'nationality',           // Quốc tịch
         'expertise',             // Chuyên môn
         'experience',            // Kinh nghiệm
-        'target_student_type',   // Người học (tất cả, học sinh, nhân viên)
+        'target_student',   // Người học (tất cả, học sinh, nhân viên)
+        'bio'
     ];
 
     /**
