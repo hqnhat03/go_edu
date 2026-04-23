@@ -74,6 +74,17 @@ class PermissionSeeder extends Seeder
             'guardian_detail',
             'guardian_edit',
             'guardian_delete',
+            // Teacher Portal
+            'teacher_portal_access',
+            'lecture_create',
+            'lecture_edit',
+            'lecture_delete',
+            'exam_create',
+            'exam_edit',
+            'exam_delete',
+            'exam_grade',
+            'evaluation_manage',
+            'announcement_manage',
         ];
 
 

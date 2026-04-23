@@ -29,11 +29,11 @@ class CreateRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'lesson_count' => 'required|integer|min:1',
             'completion_time' => 'required|integer|min:1',
-            'image_url' => 'string',
+            'image_url' => 'url|nullable',
             'level_id' => 'required|exists:levels,id',
             'subject_id' => 'required|exists:subjects,id',
             'class_rooms' => 'array',
-            'course_marterials' => 'array'
+            'course_materials' => 'array'
         ];
     }
 
@@ -43,7 +43,7 @@ class CreateRequest extends FormRequest
             'name.required' => 'Tên khóa học không được để trống',
             'status.required' => 'Trạng thái không được để trống',
             'target_student.required' => 'Đối tượng học viên không được để trống',
-            'price.required' => 'Giá khóa học không được để trống',
+            'price.required' => 'Giá bán không được để trống',
             'lesson_count.required' => 'Số lượng bài học không được để trống',
             'completion_time.required' => 'Thời gian hoàn thành không được để trống',
             'level_id.required' => 'Level không được để trống',

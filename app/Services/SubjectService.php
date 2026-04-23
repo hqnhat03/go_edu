@@ -39,7 +39,6 @@ class SubjectService
                 'slug' => Str::slug($data['name']),
                 'category' => $data['category'],
                 'status' => $data['status'],
-                'created_by' => auth()->id(),
             ]);
         } catch (QueryException $e) {
             if ($e->getCode() == 23000) {
@@ -76,5 +75,29 @@ class SubjectService
         }
         $subject->delete();
         return $subject->id;
+    }
+
+    function getCategory()
+    {
+        return Subject::query()->select('category')
+            ->distinct()
+            ->pluck('category')
+            ->map(function ($category) {
+                return [
+                    'name' => $category,
+                    'slug' => Str::slug($category),
+                ];
+            });
+    }
+
+    public function getPublishedSubject()
+    {
+        return Subject::select('id', 'name', 'category')
+            ->where('status', 'published')
+            ->get()
+            ->map(function ($subject) {
+                $subject->category = Str::slug($subject->category);
+                return $subject;
+            });
     }
 }

@@ -26,11 +26,8 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $tokens = $this->authService->login($request);
-        return ApiResponse::success([
-            'access_token' => $tokens['access_token'],
-            'refresh_token' => $tokens['refresh_token']
-        ], "User logged in successfully");
+        $data = $this->authService->login($request);
+        return ApiResponse::success($data, "User logged in successfully");
     }
 
     public function me()

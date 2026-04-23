@@ -28,7 +28,7 @@ class GuardianService
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
-                    'date_of_birth' => $data['day_of_birth'],
+                    'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
                 $user->assignRole('guardian');
@@ -44,7 +44,8 @@ class GuardianService
         }
         return [
             ...$guardian->only(['id']),
-            ...$guardian->user->only(['name', 'email', 'phone', 'status', 'avatar']),
+            ...$guardian->user->only(['name', 'email', 'phone', 'status', 'avatar', 'gender', 'address']),
+            'date_of_birth' => $guardian->user->date_of_birth,
             'students' => $guardian->students->map(function ($s) {
                 return [
                     'student_id' => $s->id,
@@ -56,18 +57,20 @@ class GuardianService
 
     public function listGuardian(array $params)
     {
-        $query = Guardian::query()->join('users', 'guardians.user_id', '=', 'users.id')
-            ->join('student_guardians', 'guardians.id', '=', 'student_guardians.guardian_id')
-            ->join('students', 'student_guardians.student_id', '=', 'students.id');
+        $query = Guardian::with(['user', 'students.user']);
 
-        if (isset($params['q'])) {
-            $query->where('users.name', 'like', '%' . $params['q'] . '%')
-                ->orWhere('users.email', 'like', '%' . $params['q'] . '%')
-                ->orWhere('phone', 'like', '%' . $params['q'] . '%');
+        if (!empty($params['search'])) {
+            $query->whereHas('user', function ($q) use ($params) {
+                $q->where('name', 'like', '%' . $params['search'] . '%')
+                ->orWhere('email', 'like', '%' . $params['search'] . '%')
+                ->orWhere('phone', 'like', '%' . $params['search'] . '%');
+            });
         }
 
         if (isset($params['status'])) {
-            $query->where('users.status', $params['status']);
+            $query->whereHas('user', function ($q) use ($params) {
+                $q->where('status', $params['status']);
+            });
         }
 
         return $query->get()->map(function ($guardian) {
@@ -78,11 +81,13 @@ class GuardianService
                 'phone' => $guardian->user->phone,
                 'status' => $guardian->user->status,
                 'avatar' => $guardian->user->avatar,
+                'gender' => $guardian->user->gender,
+                'address' => $guardian->user->address,
+                'date_of_birth' => $guardian->user->date_of_birth,
                 'students' => $guardian->students->map(function ($student) {
                     return [
                         'id' => $student->id,
                         'name' => $student->user->name,
-                        'email' => $student->user->email,
                     ];
                 })
             ];
@@ -101,7 +106,7 @@ class GuardianService
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
-                    'date_of_birth' => $data['day_of_birth'],
+                    'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
                 $guardian->students()->sync($data['student_ids']);
@@ -118,10 +123,11 @@ class GuardianService
         }
         return [
             ...$guardian->only('id'),
-            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar'),
+            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar', 'gender', 'address'),
+            'date_of_birth' => $guardian->user->date_of_birth,
             'students' => $guardian->students->map(function ($s) {
                 return [
-                    'student_id' => $s->id,
+                    'id' => $s->id,
                     'name' => $s->user->name,
                 ];
             })->values()
@@ -133,10 +139,11 @@ class GuardianService
         $guardian = Guardian::with('user', 'students')->findOrFail($id);
         return [
             ...$guardian->only('id'),
-            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar'),
+            ...$guardian->user->only('name', 'email', 'phone', 'status', 'avatar', 'gender', 'address'),
+            'date_of_birth' => $guardian->user->date_of_birth,
             'students' => $guardian->students->map(function ($s) {
                 return [
-                    'student_id' => $s->id,
+                    'id' => $s->id,
                     'name' => $s->user->name,
                 ];
             })->values()

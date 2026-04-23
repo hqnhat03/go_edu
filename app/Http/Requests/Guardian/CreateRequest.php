@@ -28,7 +28,7 @@ class CreateRequest extends FormRequest
             'address' => 'required|string|max:255',
             'gender' => 'required',
             'status' => 'required',
-            'day_of_birth' => 'required',
+            'date_of_birth' => 'required',
             'avatar' => 'nullable',
             'student_ids' => 'nullable|array',
         ];
@@ -45,7 +45,7 @@ class CreateRequest extends FormRequest
             'address.required' => 'Địa chỉ không được để trống',
             'gender.required' => 'Giới tính không được để trống',
             'status.required' => 'Trạng thái không được để trống',
-            'day_of_birth.required' => 'Ngày sinh không được để trống',
+            'date_of_birth.required' => 'Ngày sinh không được để trống',
         ];
     }
 }

@@ -44,4 +44,14 @@ class LevelController extends Controller
         $data = $this->levelService->deleteLevel($id);
         return ApiResponse::success($data, "Xóa trình độ thành công");
     }
+
+    public function getAllEducationLevel(){
+        $data = $this->levelService->getAllEducationLevel();
+        return ApiResponse::success($data, "Lấy danh sách trình độ đào tạo thành công");
+    }
+
+    public function getPublishedLevel(){
+        $data = $this->levelService->getPublishedLevel();
+        return ApiResponse::success($data, "Lấy danh sách trình độ thành công");
+    }
 }

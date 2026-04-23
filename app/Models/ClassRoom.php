@@ -36,6 +36,21 @@ class ClassRoom extends Model
 
     public function schedules()
     {
-        // return $this->hasMany(::class);
+        return $this->hasMany(ClassSchedule::class, 'class_id');
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class, 'class_id');
+    }
+
+    public function lectures()
+    {
+        return $this->hasMany(Lecture::class, 'class_id');
+    }
+
+    public function exams()
+    {
+        return $this->hasMany(Exam::class, 'class_id');
     }
 }

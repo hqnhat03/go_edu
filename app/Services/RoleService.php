@@ -10,13 +10,13 @@ class RoleService
 
     public static function listRole()
     {
-        return Role::query()->get(['id', 'name']);
+        return Role::query()->whereNotIn('name', ['student', 'teacher', 'guardian'])->get(['id', 'name']);
     }
 
     public static function createRole(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
         ]);
         $role = Role::create($data);
         return [
@@ -28,7 +28,7 @@ class RoleService
     public static function updateRole(Request $request, $id)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
         ]);
         $role = Role::findOrFail($id);
         $role->update([

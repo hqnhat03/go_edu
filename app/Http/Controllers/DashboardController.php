@@ -20,11 +20,29 @@ class DashboardController extends Controller
             ->whereYear('created_at', Carbon::now()->year)
             ->count();
 
+        $studentGrowth = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $monthName = $date->translatedFormat('F');
+            $month = $date->month;
+            $year = $date->year;
+
+            $count = Student::whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->count();
+
+            $studentGrowth[] = [
+                'label' => $monthName,
+                'count' => $count
+            ];
+        }
+
         return ApiResponse::success([
             'total_teacher' => $totalTeacher,
             'total_student' => $totalStudent,
             'total_course' => $totalCourse,
             'total_new_student' => $totalNewStudent,
+            'student_growth' => $studentGrowth,
         ], 'Lấy thông tin dashboard thành công');
     }
 }

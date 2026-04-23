@@ -26,7 +26,7 @@ class TeacherService
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
-                    'day_of_birth' => $data['day_of_birth'],
+                    'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
                 $user->assignRole('teacher');
@@ -34,13 +34,13 @@ class TeacherService
                     'nationality' => $data['nationality'],
                     'expertise' => $data['expertise'],
                     'experience' => $data['experience'],
-                    'target_student_type' => $data['target_student_type'],
+                    'target_student' => $data['target_student'],
                     'bio' => $data['bio']
                 ]);
                 return $user->teacher;
             });
         } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
+            if ($e->errorInfo[1] == '1062') {
                 throw new UserException('Email đã tồn tại');
             }
             throw $e;
@@ -50,7 +50,7 @@ class TeacherService
             ...$teacher->only([
                 'id',
                 'expertise',
-                'target_student_type',
+                'target_student',
             ]),
             ...$teacher->user->only([
                 'name',
@@ -65,9 +65,9 @@ class TeacherService
     function listTeacher(array $param)
     {
         $teacher = Teacher::query()->join('users', 'users.id', '=', 'teachers.user_id');
-        if (isset($param['q'])) {
-            $teacher->where('users.name', 'like', '%' . $param['q'] . '%')
-                ->orWhere('users.email', 'like', '%' . $param['q'] . '%');
+        if (isset($param['search'])) {
+            $teacher->where('users.name', 'like', '%' . $param['search'] . '%')
+                ->orWhere('users.email', 'like', '%' . $param['search'] . '%');
         }
         if (isset($param['status'])) {
             $teacher->where('users.status', $param['status']);
@@ -78,7 +78,7 @@ class TeacherService
         return $teacher->select([
             'teachers.id',
             'teachers.expertise',
-            'teachers.target_student_type',
+            'teachers.target_student',
             'users.name',
             'users.email',
             'users.phone',
@@ -104,7 +104,7 @@ class TeacherService
                 'address' => $data['address'],
                 'gender' => $data['gender'],
                 'status' => $data['status'],
-                'day_of_birth' => $data['day_of_birth'],
+                'date_of_birth' => $data['date_of_birth'],
                 'avatar' => $data['avatar'],
             ]);
 
@@ -112,7 +112,7 @@ class TeacherService
                 'nationality' => $data['nationality'],
                 'expertise' => $data['expertise'],
                 'experience' => $data['experience'],
-                'target_student_type' => $data['target_student_type'],
+                'target_student' => $data['target_student'],
                 'bio' => $data['bio']
             ]);
 
@@ -124,7 +124,7 @@ class TeacherService
                 'id',
                 'expertise',
                 'experience',
-                'target_student_type',
+                'target_student',
             ]),
             ...$teacher->user->only([
                 'name',
@@ -134,7 +134,7 @@ class TeacherService
                 'avatar',
                 'address',
                 'nationality',
-                'day_of_birth',
+                'date_of_birth',
                 'gender',
                 'bio'
             ])
@@ -153,7 +153,7 @@ class TeacherService
                 'id',
                 'expertise',
                 'experience',
-                'target_student_type',
+                'target_student',
             ]),
             ...$teacher->user->only([
                 'name',
@@ -163,7 +163,7 @@ class TeacherService
                 'avatar',
                 'address',
                 'nationality',
-                'day_of_birth',
+                'date_of_birth',
                 'gender',
                 'bio'
             ])

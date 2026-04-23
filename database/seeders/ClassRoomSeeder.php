@@ -24,7 +24,7 @@ class ClassRoomSeeder extends Seeder
                 'meeting_url' => 'https://meet.google.com/abc-def-ghi',
                 'status' => 'published',
                 'course_id' => 1,
-                'teachers' => [1, 2]
+                'teachers' => [1, 11]
             ]
         ];
 

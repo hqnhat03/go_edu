@@ -42,6 +42,8 @@ class StudentFactory extends Factory
             "grade" => $grade,
             "work" => null,
             "position" => null,
+            'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
+            'updated_at' => fake()->dateTimeBetween('-6 months', 'now'),
         ];
     }
 }

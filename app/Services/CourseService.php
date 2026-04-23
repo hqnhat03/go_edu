@@ -37,6 +37,10 @@ class CourseService
             $query->where('levels.id', $params['level']);
         }
 
+        if (isset($params['education_level'])) {
+            $query->where('levels.education_level', $params['education_level']);
+        }
+
         return $query->select([
             'courses.id',
             'courses.name',
@@ -50,10 +54,120 @@ class CourseService
     public function findById(int $id)
     {
         $course = Course::with(['level', 'subject', 'materials'])
-            ->withCount('classRooms')
+            ->withCount(['classRooms', 'students as student_count'])
             ->findOrFail($id);
 
         return $this->transform($course, true);
+    }
+
+    public function getPublicList(array $params)
+    {
+        $query = Course::query()
+            ->with(['classRooms.teachers.user'])
+            ->withCount('classRooms')
+            ->where('status', 'published');
+
+        if (isset($params['name'])) {
+            $query->where('name', 'like', '%' . $params['name'] . '%');
+        }
+
+        if (isset($params['target_student'])) {
+            $query->where('target_student', $params['target_student']);
+        }
+
+        if (isset($params['subject_id'])) {
+            $query->where('subject_id', $params['subject_id']);
+        }
+
+        if (isset($params['level_id'])) {
+            $query->where('level_id', $params['level_id']);
+        }
+
+        if (isset($params['education_level'])) {
+            $query->whereHas('level', function ($q) use ($params) {
+                $q->where('education_level', $params['education_level']);
+            });
+        }
+
+        $limit = $params['limit'] ?? 10;
+        $courses = $query->paginate($limit);
+
+        $courses->getCollection()->transform(function ($course) {
+            $teachers = collect();
+            if ($course->relationLoaded('classRooms')) {
+                foreach ($course->classRooms as $classRoom) {
+                    foreach ($classRoom->teachers as $teacher) {
+                        if ($teacher->user) {
+                            $teachers->push([
+                                'id' => $teacher->id,
+                                'name' => $teacher->user->name,
+                                'avatar' => $teacher->user->avatar,
+                            ]);
+                        }
+                    }
+                }
+                $course->setAttribute('teachers', $teachers->unique('id')->values()->all());
+                $course->makeHidden('classRooms');
+            }
+            return $course;
+        });
+
+        return $courses;
+    }
+
+    public function findPublicBySlug($slug)
+    {
+        $course = Course::with(['subject', 'classRooms.teachers.user', 'classRooms.schedules'])
+            ->withCount('classRooms')
+            ->withCount([
+                'classRooms as enrolled_students_count' => function ($q) {
+                    $q->join('class_students', 'class_rooms.id', '=', 'class_students.class_id');
+                }
+            ])
+            ->where('status', 'published')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        // Map từng lớp: kèm teachers và schedules riêng
+        $classRooms = $course->classRooms->map(function ($classRoom) {
+            $teachers = $classRoom->teachers
+                ->filter(fn($t) => $t->user)
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'name' => $t->user->name,
+                    'avatar' => $t->user->avatar,
+                ])->values();
+
+            $schedules = $classRoom->schedules
+                ->sortBy('day_of_week')
+                ->map(fn($s) => [
+                    'day_of_week' => $s->day_of_week,
+                    'start_time' => $s->start_time,
+                    'end_time' => $s->end_time,
+                ])->values();
+
+            return [
+                'id' => $classRoom->id,
+                'class_code' => $classRoom->class_code,
+                'start_day' => $classRoom->start_day,
+                'end_day' => $classRoom->end_day,
+                'status' => $classRoom->status,
+                'teachers' => $teachers,
+                'schedules' => $schedules,
+            ];
+        });
+
+        $course->setAttribute('class_rooms', $classRooms);
+
+        // Làm gọn subject: chỉ trả name và category
+        $course->setAttribute('subject', [
+            'name' => $course->subject?->name,
+            'category' => $course->subject?->category,
+        ]);
+
+        $course->makeHidden('classRooms');
+
+        return $course;
     }
 
     public function create(array $data)
@@ -74,9 +188,9 @@ class CourseService
                     'subject_id' => $data['subject_id'],
                 ]);
 
-                if (!empty($data['course_marterials'])) {
+                if (!empty($data['course_materials'])) {
                     $course->materials()->createMany(
-                        collect($data['course_marterials'])->map(fn($m) => [
+                        collect($data['course_materials'])->map(fn($m) => [
                             'id' => $m['id'] ?? (string) Str::uuid(),
                             'link_url' => $m['link_url'],
                         ])->toArray()
@@ -92,7 +206,7 @@ class CourseService
             throw $e;
         }
 
-        return $this->transform($course->load(['level', 'subject'])->loadCount('classRooms'));
+        return $this->transform($course->load(['level', 'subject'])->loadCount(['classRooms', 'students as student_count']));
     }
 
     public function update(array $data, int $id)
@@ -137,7 +251,7 @@ class CourseService
             throw $e;
         }
 
-        return $this->transform($course->load(['level', 'subject', 'materials'])->loadCount('classRooms'), true);
+        return $this->transform($course->load(['level', 'subject', 'materials'])->loadCount(['classRooms', 'students as student_count']), true);
     }
 
     public function delete(int $id)
@@ -145,6 +259,32 @@ class CourseService
         $course = Course::findOrFail($id);
         $course->delete();
         return $course->id;
+    }
+
+    public function getStudents(int $id, array $params)
+    {
+        $course = Course::findOrFail($id);
+        $query = $course->students()->join('users', 'students.user_id', '=', 'users.id');
+
+        if (isset($params['is_assigned'])) {
+            $isAssigned = filter_var($params['is_assigned'], FILTER_VALIDATE_BOOLEAN);
+            $query->wherePivot('is_assigned', $isAssigned);
+        }
+
+        return $query->select([
+            'students.id',
+            'users.name',
+            'users.email',
+            'users.phone',
+            'users.avatar',
+            'course_students.is_assigned',
+            DB::raw("(SELECT cr.class_code 
+                      FROM class_rooms cr
+                      JOIN class_students cs ON cr.id = cs.class_id 
+                      WHERE cs.student_id = students.id 
+                      AND cr.course_id = $id 
+                      LIMIT 1) as class_code")
+        ])->get();
     }
 
     /**
@@ -161,6 +301,7 @@ class CourseService
             'level' => $course->level?->level,
             'subject' => $course->subject?->name,
             'class_rooms_count' => $course->class_rooms_count ?? 0,
+            'student_count' => $course->student_count ?? 0,
         ];
 
         if ($full) {
@@ -168,7 +309,7 @@ class CourseService
                 'target_student' => $course->target_student,
                 'lesson_count' => $course->lesson_count,
                 'completion_time' => $course->completion_time,
-                'course_marterials' => $course->materials ?? [],
+                'course_materials' => $course->materials ?? [],
             ]);
         }
 

@@ -24,7 +24,7 @@ class StudentService
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
-                    'date_of_birth' => $data['day_of_birth'],
+                    'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
 
@@ -64,32 +64,47 @@ class StudentService
 
     }
 
-    public function listStudent(array $param)
+    public function listStudent(array $params)
     {
-        $student = Student::query()->join('users', 'users.id', '=', 'students.user_id');
+        $query = Student::query()
+            ->with(['user'])
+            ->orderBy('created_at', 'desc');
 
-        if (isset($param['q'])) {
-            $student->where('users.name', 'like', '%' . $param['q'] . '%')
-                ->orWhere('users.email', 'like', '%' . $param['q'] . '%');
+        if (isset($params['q'])) {
+            $query->whereHas('user', function ($q) use ($params) {
+                $q->where('name', 'like', '%' . $params['q'] . '%')
+                    ->orWhere('email', 'like', '%' . $params['q'] . '%');
+            });
         }
 
-        if (isset($param['status'])) {
-            $student->where('users.status', $param['status']);
+        if (isset($params['status'])) {
+            $query->whereHas('user', function ($q) use ($params) {
+                $q->where('status', $params['status']);
+            });
         }
 
-        if (isset($param['student_type'])) {
-            $student->where('student_type', $param['student_type']);
+        if (isset($params['student_type'])) {
+            $query->where('student_type', $params['student_type']);
         }
 
-        return $student->select([
-            'students.id',
-            'students.student_type',
-            'users.name',
-            'users.email',
-            'users.phone',
-            'users.status',
-            'users.avatar'
-        ])->get();
+        $limit = $params['limit'] ?? 10;
+        $students = $query->paginate($limit);
+
+        $students->getCollection()->transform(function ($student) {
+            $user = $student->user;
+            return [
+                'id' => $student->id,
+                'student_type' => $student->student_type,
+                'name' => $user->name ?? null,
+                'email' => $user->email ?? null,
+                'phone' => $user->phone ?? null,
+                'status' => $user->status ?? null,
+                'avatar' => $user->avatar ?? null,
+                'created_at' => $student->created_at,
+            ];
+        });
+
+        return $students;
     }
 
     public function updateStudent(array $data, $id)
@@ -108,7 +123,7 @@ class StudentService
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
-                    'date_of_birth' => $data['day_of_birth'],
+                    'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
 
@@ -192,12 +207,25 @@ class StudentService
 
     public function getAllStudent(Request $request)
     {
-        $status = $request->query('status');
-        $students = Student::query()->join('users', 'users.id', '=', 'students.user_id')
-            ->select('students.id', 'users.email', 'users.name', 'users.status');
-        if ($status) {
-            $students = $students->where('users.status', $status);
+        $name = $request->query('search');
+        $students = Student::query()
+            ->join('users', 'users.id', '=', 'students.user_id')
+            ->select('students.id', 'users.name');
+
+        // ❗ bắt buộc phải có keyword
+        if (empty($name)) {
+            return response()->json([]);
         }
+
+        $students->where('users.name', 'like', '%' . $name . '%');
+
+        // keyword ngắn → limit ít
+        if (mb_strlen($name) < 3) {
+            $students->limit(20);
+        } else {
+            $students->limit(50); // vẫn phải limit
+        }
+
         return $students->get();
     }
 }

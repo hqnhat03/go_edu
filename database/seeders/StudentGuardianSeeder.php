@@ -17,13 +17,16 @@ class StudentGuardianSeeder extends Seeder
     public function run(): void
     {
 
-        User::factory()->count(30)->create();
-        $userIds = DB::table('users')->latest('id')->limit(30)->pluck('id')->toArray();
-        $studentUserIds = array_slice($userIds, 0, 20);
+        User::factory()->count(200)->create();
+        $userIds = DB::table('users')->latest('id')->limit(200)->pluck('id')->toArray();
+        $studentUserIds = array_slice($userIds, 0, 190);
         $students = [];
         foreach ($studentUserIds as $userId) {
+            $createdAt = fake()->dateTimeBetween('-6 months', 'now');
             $students[] = [
                 'user_id' => $userId,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ];
         }
         Student::insert($students);
@@ -33,6 +36,8 @@ class StudentGuardianSeeder extends Seeder
         foreach ($guardianUserIds as $userId) {
             $guardians[] = [
                 'user_id' => $userId,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
         Guardian::insert($guardians);

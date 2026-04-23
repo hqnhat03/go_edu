@@ -30,6 +30,7 @@ class UpdateRequest extends FormRequest
             'status' => 'required|in:draft,published,archived',
             'course_id' => 'required',
             'class_teachers' => 'array',
+            'class_schedules' => 'array',
         ];
     }
 

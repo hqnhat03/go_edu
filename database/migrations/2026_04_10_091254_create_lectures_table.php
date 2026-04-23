@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('name');
             $table->integer('duration_time');
             $table->integer('lecture_number');
-            $table->string('document_url');
+            $table->string('document_url')->nullable();
             $table->string('video_url');
             $table->text('description');
             $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();

@@ -41,6 +41,8 @@ class UserFactory extends Factory
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
             'avatar' => 'https://i.pravatar.cc/150?u=' . fake()->numberBetween(1, 1000),
+            'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
+            'updated_at' => fake()->dateTimeBetween('-6 months', 'now'),
         ];
     }
 

@@ -30,6 +30,7 @@ class CreateRequest extends FormRequest
             'status' => 'required|in:draft,published,archived',
             'course_id' => 'required|integer',
             'class_teachers' => 'array',
+            'class_schedules' => 'array',
         ];
     }
 
@@ -51,6 +52,8 @@ class CreateRequest extends FormRequest
             'status.in' => 'Trạng thái không hợp lệ',
             'course_id.required' => 'Mã khóa học không được để trống',
             'course_id.integer' => 'Mã khóa học phải là số',
+            'class_teachers.array' => 'Danh sách giáo viên phải là mảng',
+            'class_schedules.array' => 'Danh sách lịch học phải là mảng',
         ];
     }
 }

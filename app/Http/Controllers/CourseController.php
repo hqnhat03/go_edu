@@ -51,4 +51,9 @@ class CourseController extends Controller
         $course = $this->courseService->delete($id);
         return ApiResponse::success($course, 'Xóa khóa học thành công');
     }
+    public function getStudents(Request $request, int $id): JsonResponse
+    {
+        $students = $this->courseService->getStudents($id, $request->all());
+        return ApiResponse::success($students, 'Lấy danh sách học sinh thành công');
+    }
 }

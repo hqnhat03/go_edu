@@ -40,4 +40,16 @@ class SubjectController extends Controller
         $data = $this->subjectService->deleteSubject($id);
         return ApiResponse::success($data, 'Xóa môn học thành công');
     }
+
+    public function getAllCategory()
+    {
+        $data = $this->subjectService->getCategory();
+        return ApiResponse::success($data, 'Lấy danh sách danh mục môn học thành công');
+    }
+
+    public function getPublishedSubject()
+    {
+        $data = $this->subjectService->getPublishedSubject();
+        return ApiResponse::success($data, 'Lấy danh sách môn học thành công');
+    }
 }

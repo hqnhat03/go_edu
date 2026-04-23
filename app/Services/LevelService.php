@@ -82,4 +82,16 @@ class LevelService
         $level->delete();
         return $level->id;
     }
+
+    public function getAllEducationLevel()
+    {
+        return Level::select('education_level')->distinct()->get();
+    }
+
+    public function getPublishedLevel()
+    {
+        return Level::select('id', 'level')
+            ->where('status', 'published')
+            ->get();
+    }
 }

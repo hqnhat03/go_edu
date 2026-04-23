@@ -48,4 +48,14 @@ class Course extends Model
     {
         return $this->hasMany(ClassRoom::class);
     }
+
+    public function courseRegistrations()
+    {
+        return $this->hasMany(CourseRegistration::class);
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'course_students')->withPivot('is_assigned');
+    }
 }

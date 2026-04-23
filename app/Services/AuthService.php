@@ -34,8 +34,7 @@ class AuthService
 
     public function login(LoginRequest $request)
     {
-        // $data = $request->validated();
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->with(['roles', 'student', 'teacher', 'guardian'])->first();
 
         if (!$user) {
             throw new UserException('Sai email hoặc mật khâu');
@@ -52,9 +51,27 @@ class AuthService
         if (!$token = auth()->attempt($credentials)) {
             throw new UserException("Sai email hoặc mật khâu");
         }
+
+        $role = $user->roles->first()?->name;
+        $id = $user->id;
+
+        if ($user->student) {
+            $id = $user->student->id;
+        } elseif ($user->teacher) {
+            $id = $user->teacher->id;
+        } elseif ($user->guardian) {
+            $id = $user->guardian->id;
+        }
+
         return [
             'access_token' => $token,
-            'refresh_token' => $token, // Using Option A: JWT acts as its own refresh token natively
+            'user' => [
+                'id' => $id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role,
+                'avatar' => $user->avatar,
+            ],
         ];
     }
 

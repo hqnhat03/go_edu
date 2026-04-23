@@ -11,13 +11,18 @@ class FilterController extends Controller
     public function index(request $request)
     {
         $type = $request->type;
-        return match ($type) {
+        $data = match ($type) {
             'course' => $this->courseFilters(),
             'student' => $this->studentFilters(),
             'teacher' => $this->teacherFilters(),
             'subject' => $this->subjectFilters(),
             default => [],
         };
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
 
     private function subjectFilters()

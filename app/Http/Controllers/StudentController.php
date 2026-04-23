@@ -5,19 +5,27 @@ namespace App\Http\Controllers;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Student\CreateRequest;
 use App\Http\Requests\Student\UpdateRequest;
+use App\Services\CourseRegistrationService;
 use App\Services\StudentService;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    public function __construct(private StudentService $studentService)
-    {
+    public function __construct(
+        private StudentService $studentService,
+        private CourseRegistrationService $registrationService
+    ) {
     }
 
     public function index(Request $request)
     {
-        $data = $this->studentService->listStudent($request->all());
-        return ApiResponse::success($data);
+        $students = $this->studentService->listStudent($request->all());
+        return ApiResponse::success($students->items(), 'Lấy danh sách học sinh thành công', [
+            'total' => $students->total(),
+            'per_page' => $students->perPage(),
+            'current_page' => $students->currentPage(),
+            'last_page' => $students->lastPage()
+        ]);
     }
 
     public function store(CreateRequest $request)
@@ -48,5 +56,19 @@ class StudentController extends Controller
     {
         $data = $this->studentService->getAllStudent($request);
         return ApiResponse::success($data, 'Lấy danh sách học sinh thành công');
+    }
+
+    public function enrollCourse(Request $request, $id)
+    {
+        $request->validate([
+            'course_id' => 'required|exists:courses,id',
+        ], [
+            'course_id.required' => 'Vui lòng chọn khóa học',
+            'course_id.exists' => 'Khóa học không tồn tại',
+        ]);
+
+        $registration = $this->registrationService->enroll((int) $id, (int) $request->course_id);
+
+        return ApiResponse::success($registration, 'Thêm học sinh vào khóa học thành công');
     }
 }
