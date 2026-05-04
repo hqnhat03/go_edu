@@ -55,89 +55,93 @@ Route::prefix('/auth')->group(function () {
 
 Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/profile', [AdminController::class, 'getProfile']);
+    Route::put('/profile', [AdminController::class, 'updateProfile']);
 
-    Route::prefix('/teachers')->group(function () {
-        Route::middleware(['permission:teacher_list'])->get('/', [TeacherController::class, 'index']);
-        Route::middleware(['permission:teacher_create'])->post('/', [TeacherController::class, 'store']);
-        Route::middleware(['permission:teacher_detail'])->get('/{id}', [TeacherController::class, 'show']);
-        Route::middleware(['permission:teacher_edit'])->put('/{id}', [TeacherController::class, 'update']);
-        Route::middleware(['permission:teacher_delete'])->delete('/{id}', [TeacherController::class, 'destroy']);
+    Route::prefix('/teachers')->controller(TeacherController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:teacher_list');
+        Route::post('/', 'store')->middleware('permission:teacher_create');
+        Route::get('/{id}', 'show')->middleware('permission:teacher_detail');
+        Route::put('/{id}', 'update')->middleware('permission:teacher_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:teacher_delete');
     });
 
-    Route::prefix('/students')->group(function () {
-        Route::middleware(['permission:student_list'])->get('/all-students', [StudentController::class, 'getAllStudent']);
-        Route::middleware(['permission:student_list'])->get('/', [StudentController::class, 'index']);
-        Route::middleware(['permission:student_create'])->post('/', [StudentController::class, 'store']);
-        Route::middleware(['permission:student_detail'])->get('/{id}', [StudentController::class, 'show']);
-        Route::middleware(['permission:student_edit'])->put('/{id}', [StudentController::class, 'update']);
-        Route::middleware(['permission:student_edit'])->post('/{id}/enroll-course', [StudentController::class, 'enrollCourse']);
-        Route::middleware(['permission:student_delete'])->delete('/{id}', [StudentController::class, 'destroy']);
+    Route::prefix('/students')->controller(StudentController::class)->group(function () {
+        Route::get('/all-students', 'getAllStudent')->middleware('permission:student_list');
+        Route::get('/', 'index')->middleware('permission:student_list');
+        Route::post('/', 'store')->middleware('permission:student_create');
+        Route::get('/{id}', 'show')->middleware('permission:student_detail');
+        Route::put('/{id}', 'update')->middleware('permission:student_edit');
+        Route::post('/{id}/enroll-course', 'enrollCourse')->middleware('permission:student_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:student_delete');
     });
 
-    Route::prefix('/subjects')->group(function () {
-        Route::middleware(['permission:subject_list'])->get('/', [SubjectController::class, 'index']);
-        Route::middleware(['permission:subject_create'])->post('/', [SubjectController::class, 'store']);
-        Route::middleware(['permission:subject_edit'])->put('/{id}', [SubjectController::class, 'update']);
-        Route::middleware(['permission:subject_delete'])->delete('/{id}', [SubjectController::class, 'destroy']);
-        Route::middleware(['permission:subject_list'])->get('/categories', [SubjectController::class, 'getAllCategory']);
+    Route::prefix('/subjects')->controller(SubjectController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:subject_list');
+        Route::post('/', 'store')->middleware('permission:subject_create');
+        Route::put('/{id}', 'update')->middleware('permission:subject_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:subject_delete');
+        Route::get('/categories', 'getAllCategory')->middleware('permission:subject_list');
     });
 
-    Route::prefix('/levels')->group(function () {
-        Route::middleware(['permission:level_list'])->get('/', [LevelController::class, 'index']);
-        Route::middleware(['permission:level_create'])->post('/', [LevelController::class, 'store']);
-        Route::middleware(['permission:level_edit'])->put('/{id}', [LevelController::class, 'update']);
-        Route::middleware(['permission:level_delete'])->delete('/{id}', [LevelController::class, 'destroy']);
-        Route::middleware(['permission:level_list'])->get('/education-levels', [LevelController::class, 'getAllEducationLevel']);
+    Route::prefix('/levels')->controller(LevelController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:level_list');
+        Route::post('/', 'store')->middleware('permission:level_create');
+        Route::put('/{id}', 'update')->middleware('permission:level_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:level_delete');
+        Route::get('/education-levels', 'getAllEducationLevel')->middleware('permission:level_list');
     });
 
-    Route::prefix('/roles')->group(function () {
-        Route::middleware(['permission:role_list'])->get('/', [RoleController::class, 'listRole']);
-        Route::middleware(['permission:role_create'])->post('/', [RoleController::class, 'createRole']);
-        Route::middleware(['permission:role_edit'])->put('/{id}', [RoleController::class, 'updateRole']);
-        Route::middleware(['permission:role_delete'])->delete('/{id}', [RoleController::class, 'deleteRole']);
+    Route::prefix('/roles')->controller(RoleController::class)->group(function () {
+        Route::get('/', 'listRole')->middleware('permission:role_list');
+        Route::post('/', 'createRole')->middleware('permission:role_create');
+        Route::put('/{id}', 'updateRole')->middleware('permission:role_edit');
+        Route::delete('/{id}', 'deleteRole')->middleware('permission:role_delete');
     });
 
-    Route::prefix('/guardians')->group(function () {
-        Route::middleware(['permission:guardian_list'])->get('/', [GuardianController::class, 'index']);
-        Route::middleware(['permission:guardian_create'])->post('/', [GuardianController::class, 'store']);
-        Route::middleware(['permission:guardian_detail'])->get('/{id}', [GuardianController::class, 'show']);
-        Route::middleware(['permission:guardian_edit'])->put('/{id}', [GuardianController::class, 'update']);
-        Route::middleware(['permission:guardian_delete'])->delete('/{id}', [GuardianController::class, 'destroy']);
+    Route::prefix('/guardians')->controller(GuardianController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:guardian_list');
+        Route::post('/', 'store')->middleware('permission:guardian_create');
+        Route::get('/{id}', 'show')->middleware('permission:guardian_detail');
+        Route::put('/{id}', 'update')->middleware('permission:guardian_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:guardian_delete');
     });
 
-    Route::prefix('/courses')->group(function () {
-        Route::middleware(['permission:course_list'])->get('/', [CourseController::class, 'index']);
-        Route::middleware(['permission:course_create'])->post('/', [CourseController::class, 'store']);
-        Route::middleware(['permission:course_detail'])->get('/{id}', [CourseController::class, 'show']);
-        Route::middleware(['permission:course_edit'])->put('/{id}', [CourseController::class, 'update']);
-        Route::middleware(['permission:course_delete'])->delete('/{id}', [CourseController::class, 'destroy']);
-        Route::middleware(['permission:course_detail'])->get('/{id}/students', [CourseController::class, 'getStudents']);
+    Route::prefix('/courses')->controller(CourseController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:course_list');
+        Route::post('/', 'store')->middleware('permission:course_create');
+        Route::get('/{id}', 'show')->middleware('permission:course_detail');
+        Route::put('/{id}', 'update')->middleware('permission:course_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:course_delete');
+        Route::get('/{id}/students', 'getStudents')->middleware('permission:course_detail');
     });
 
-    Route::prefix('/classes')->group(function () {
-        Route::middleware(['permission:class_list'])->get('/', [ClassRoomController::class, 'index']);
-        Route::middleware(['permission:class_create'])->post('/', [ClassRoomController::class, 'store']);
-        Route::middleware(['permission:class_detail'])->get('/{id}', [ClassRoomController::class, 'show']);
-        Route::middleware(['permission:class_edit'])->put('/{id}', [ClassRoomController::class, 'update']);
-        Route::middleware(['permission:class_delete'])->delete('/{id}', [ClassRoomController::class, 'destroy']);
-        Route::middleware(['permission:class_edit'])->post('/{id}/assign-students', [ClassRoomController::class, 'assignStudents']);
+    Route::prefix('/classes')->controller(ClassRoomController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:class_list');
+        Route::post('/', 'store')->middleware('permission:class_create');
+        Route::get('/{id}', 'show')->middleware('permission:class_detail');
+        Route::put('/{id}', 'update')->middleware('permission:class_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:class_delete');
+        Route::post('/{id}/assign-students', 'assignStudents')->middleware('permission:class_edit');
     });
 
-    Route::prefix('/news')->group(function () {
-        Route::middleware(['permission:news_list'])->get('/', [NewController::class, 'index']);
-        Route::middleware(['permission:news_create'])->post('/', [NewController::class, 'store']);
-        Route::middleware(['permission:news_detail'])->get('/{id}', [NewController::class, 'show']);
-        Route::middleware(['permission:news_edit'])->put('/{id}', [NewController::class, 'update']);
-        Route::middleware(['permission:news_delete'])->delete('/{id}', [NewController::class, 'destroy']);
+    Route::prefix('/news')->controller(NewController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:news_list');
+        Route::post('/', 'store')->middleware('permission:news_create');
+        Route::get('/{id}', 'show')->middleware('permission:news_detail');
+        Route::put('/{id}', 'update')->middleware('permission:news_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:news_delete');
     });
 
-    Route::prefix('/admins')->group(function () {
-        Route::middleware(['permission:admin_list'])->get('/', [AdminController::class, 'index']);
-        Route::middleware(['permission:admin_create'])->post('/', [AdminController::class, 'store']);
-        Route::middleware(['permission:admin_detail'])->get('/{id}', [AdminController::class, 'show']);
-        Route::middleware(['permission:admin_edit'])->put('/{id}', [AdminController::class, 'update']);
-        Route::middleware(['permission:admin_delete'])->delete('/{id}', [AdminController::class, 'destroy']);
+    Route::prefix('/admins')->controller(AdminController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:admin_list');
+        Route::post('/', 'store')->middleware('permission:admin_create');
+        Route::get('/{id}', 'show')->middleware('permission:admin_detail');
+        Route::put('/{id}', 'update')->middleware('permission:admin_edit');
+        Route::delete('/{id}', 'destroy')->middleware('permission:admin_delete');
     });
+
+    Route::get('/permissions', [RoleController::class, 'listPermission'])->middleware('permission:role_list');
 });
 
 
@@ -160,6 +164,10 @@ Route::prefix('/student')->group(function () {
 
 // ─── Student Portal ──────────────────────────────────────────────────────────
 Route::middleware(['auth:api', 'role:student'])->prefix('/student')->group(function () {
+    // Profile
+    Route::get('/profile', [StudentPortalController::class, 'getProfile']);
+    Route::put('/profile', [StudentPortalController::class, 'updateProfile']);
+
     // Schedules
     Route::prefix('/schedules')->group(function () {
         Route::get('/day', [StudentPortalController::class, 'dailySchedules']);

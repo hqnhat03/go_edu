@@ -34,7 +34,7 @@ class TeacherPortalService
 
         return [
             ...$teacher->only(['id', 'expertise', 'experience', 'nationality', 'target_student', 'bio']),
-            ...$teacher->user->only(['name', 'email', 'phone', 'avatar', 'gender', 'date_of_birth', 'address', 'status']),
+            ...$teacher->user->only(['name', 'email', 'phone', 'avatar', 'gender', 'date_of_birth', 'address']),
         ];
     }
 

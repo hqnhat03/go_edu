@@ -14,12 +14,15 @@ use Str;
 
 class GuardianService
 {
+    public function __construct(protected MailService $mailService)
+    {
+    }
 
     public function createGuardian(array $data)
     {
+        $password = Str::random(10);
         try {
-            $guardian = DB::transaction(function () use ($data) {
-                $password = Str::random(8);
+            $guardian = DB::transaction(function () use ($data, $password) {
                 $user = User::create([
                     "name" => $data["name"],
                     "email" => $data["email"],
@@ -37,11 +40,17 @@ class GuardianService
                 return $guardian;
             });
         } catch (QueryException $e) {
+            if ($e->getCode() === '23505' || $e->getCode() === '23000' || (isset($e->errorInfo[1]) && $e->errorInfo[1] == '1062')) {
+                throw new UserException("Email đã tồn tại");
+            }
             if ($e->errorInfo[1] == '1452') {
                 throw new UserException("Học sinh không tồn tại");
             }
             throw $e;
         }
+
+        $this->mailService->sendGuardianAccountCreatedInfo($guardian->user, $password);
+
         return [
             ...$guardian->only(['id']),
             ...$guardian->user->only(['name', 'email', 'phone', 'status', 'avatar', 'gender', 'address']),

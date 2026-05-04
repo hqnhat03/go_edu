@@ -39,5 +39,11 @@ class RoleController extends Controller
         return ApiResponse::success($data, 'Xóa vai trò thành công');
 
     }
+
+    public function listPermission()
+    {
+        $data = RoleService::listPermission();
+        return ApiResponse::success($data, 'Lấy danh sách quyền thành công');
+    }
 }
 

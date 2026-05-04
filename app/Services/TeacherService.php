@@ -10,41 +10,51 @@ use App\Models\User;
 use DB;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TeacherService
 {
+    public function __construct(protected MailService $mailService)
+    {
+    }
     function createTeacher(array $data)
     {
+        $password = Str::random(10);
+
         try {
-            $teacher = DB::transaction(function () use ($data) {
+            $teacher = DB::transaction(function () use ($data, $password) {
                 // Tạo user
                 $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'phone' => $data['phone'],
-                    'password' => 'password',
+                    'password' => $password,
                     'address' => $data['address'],
                     'gender' => $data['gender'],
                     'status' => $data['status'],
                     'date_of_birth' => $data['date_of_birth'],
                     'avatar' => $data['avatar'],
                 ]);
+
                 $user->assignRole('teacher');
-                $user->teacher()->create([
+
+                return $user->teacher()->create([
                     'nationality' => $data['nationality'],
                     'expertise' => $data['expertise'],
                     'experience' => $data['experience'],
                     'target_student' => $data['target_student'],
                     'bio' => $data['bio']
                 ]);
-                return $user->teacher;
             });
         } catch (QueryException $e) {
-            if ($e->errorInfo[1] == '1062') {
+            // 23505: Postgres unique violation, 1062: MySQL unique violation
+            if ($e->getCode() == '23505' || (isset($e->errorInfo[1]) && $e->errorInfo[1] == '1062')) {
                 throw new UserException('Email đã tồn tại');
             }
             throw $e;
         }
+
+        $this->mailService->sendTeacherAccountCreatedInfo($teacher->user, $password);
 
         return [
             ...$teacher->only([

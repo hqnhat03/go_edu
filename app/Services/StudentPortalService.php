@@ -26,6 +26,48 @@ class StudentPortalService
         return $student;
     }
 
+    // ─── Profile ────────────────────────────────────────────────────
+
+    /**
+     * Lấy thông tin profile của học sinh đang đăng nhập.
+     */
+    public function getProfile(): array
+    {
+        $student = $this->currentStudent()->load('user');
+
+        return [
+            ...$student->only(['id', 'student_type', 'school', 'grade', 'work', 'position']),
+            ...$student->user->only(['name', 'email', 'phone', 'avatar', 'gender', 'date_of_birth', 'address']),
+        ];
+    }
+
+    /**
+     * Cập nhật profile (thông tin student + user).
+     */
+    public function updateProfile(array $data): array
+    {
+        $student = $this->currentStudent()->load('user');
+
+        $student->user->update(array_filter([
+            'name' => $data['name'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'address' => $data['address'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'avatar' => $data['avatar'] ?? null,
+        ], fn($v) => !is_null($v)));
+
+        $student->update(array_filter([
+            'student_type' => $data['student_type'] ?? null,
+            'school' => $data['school'] ?? null,
+            'grade' => $data['grade'] ?? null,
+            'work' => $data['work'] ?? null,
+            'position' => $data['position'] ?? null,
+        ], fn($v) => !is_null($v)));
+
+        return $this->getProfile();
+    }
+
     /**
      * Lịch học theo ngày.
      */
@@ -473,7 +515,7 @@ class StudentPortalService
                     'is_correct' => $detail->is_correct,
                     'teacher_comment' => $detail->teacher_comment,
                 ];
-            })->sortBy(function($detail) {
+            })->sortBy(function ($detail) {
                 return $detail['question'] ? $detail['question']['order_number'] : 9999;
             })->values()
         ];

@@ -32,7 +32,7 @@ class PermissionSeeder extends Seeder
             'student_create',
             'student_edit',
             'student_delete',
-            'role_management', // Cho phần "Phân quyền màn hình"
+            'permission_manage', // Cho phần "Phân quyền màn hình"
             'course_list',
             'course_detail',
             'course_edit',
@@ -54,6 +54,7 @@ class PermissionSeeder extends Seeder
             'grade_create',
             'grade_delete',
             'student_in_course_list',
+            'student_in_course_create',
             'student_in_course_detail',
             'student_in_course_edit',
             'student_in_course_delete',
@@ -73,18 +74,7 @@ class PermissionSeeder extends Seeder
             'guardian_create',
             'guardian_detail',
             'guardian_edit',
-            'guardian_delete',
-            // Teacher Portal
-            'teacher_portal_access',
-            'lecture_create',
-            'lecture_edit',
-            'lecture_delete',
-            'exam_create',
-            'exam_edit',
-            'exam_delete',
-            'exam_grade',
-            'evaluation_manage',
-            'announcement_manage',
+            'guardian_delete'
         ];
 
 

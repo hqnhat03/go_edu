@@ -63,4 +63,24 @@ class AdminController extends Controller
             return ApiResponse::error($e->getMessage(), [], 404);
         }
     }
+
+    public function getProfile()
+    {
+        try {
+            $data = $this->adminService->getProfile();
+            return ApiResponse::success($data);
+        } catch (UserException $e) {
+            return ApiResponse::error($e->getMessage(), [], 404);
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+            $data = $this->adminService->updateProfile($request->all());
+            return ApiResponse::success($data, 'Cập nhật hồ sơ thành công');
+        } catch (UserException $e) {
+            return ApiResponse::error($e->getMessage(), [], 400);
+        }
+    }
 }

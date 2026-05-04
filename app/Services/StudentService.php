@@ -8,18 +8,24 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class StudentService
 {
+    public function __construct(protected MailService $mailService)
+    {
+    }
+
     public function createStudent(array $data)
     {
+        $password = Str::random(10);
         try {
-            $user = DB::transaction(function () use ($data) {
+            $user = DB::transaction(function () use ($data, $password) {
 
                 $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
-                    'password' => bcrypt('password123'),
+                    'password' => $password,
                     'phone' => $data['phone'],
                     'address' => $data['address'],
                     'gender' => $data['gender'],
@@ -38,15 +44,19 @@ class StudentService
                     'position' => $data['position'],
                 ]);
 
+
                 return $user; // ✅ phải return trong transaction
             });
 
         } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
+            if ($e->getCode() === '23505' || $e->getCode() === '23000' || (isset($e->errorInfo[1]) && $e->errorInfo[1] == '1062')) {
                 throw new UserException("Email đã tồn tại");
             }
             throw $e;
         }
+
+        $this->mailService->sendStudentAccountCreatedInfo($user, $password);
+
         return [
             ...$user->only([
                 'name',

@@ -59,8 +59,7 @@ class Handler extends ExceptionHandler
 
             // 3. Nếu là API, luôn ép trả về JSON khi gặp lỗi khác (để tránh bị redirect ra layout HTML)
             if ($request->is('api/*')) {
-                dd($e);
-                $statusCode = method_exists($e, 'getStatusCode') ? $e->getCode() : 500;
+                $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
                 return ApiResponse::error($e->getMessage(), [], $statusCode);
             }
         });

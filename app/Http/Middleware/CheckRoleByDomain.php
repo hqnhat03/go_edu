@@ -24,11 +24,11 @@ class CheckRoleByDomain
 
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
         $domainMap = [
-            'goedu.demo.vn' => ['super_admin', 'admin'],
-            'teacher-goedu.demo.vn' => ['teacher'],
-            'student-goedu.demo.vn' => ['student'],
-            'localhost' => ['super_admin', 'admin'],
-            '127.0.0.1' => ['super_admin', 'admin'],
+            'goedu.demo.vn' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            'teacher-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['teacher']],
+            'student-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['student']],
+            'localhost' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            '127.0.0.1' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
         ];
 
         // Nếu domain không nằm trong danh sách quản lý, có thể chặn hoặc bỏ qua
@@ -38,10 +38,10 @@ class CheckRoleByDomain
             ], 404);
         }
 
-        $requiredRole = $domainMap[$host];
+        $requiredRoleData = $domainMap[$host];
 
         // 3. Đính kèm thông tin role yêu cầu vào request để Controller sử dụng
-        $request->attributes->add(['required_role' => $requiredRole]);
+        $request->attributes->add(['required_role' => $requiredRoleData]);
 
         return $next($request);
     }

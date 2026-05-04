@@ -41,10 +41,23 @@ class AuthService
         }
 
         // Lấy role yêu cầu từ Middleware
-        $requiredRole = $request->attributes->get('required_role');
+        $requiredRoleData = $request->attributes->get('required_role');
 
-        if ($requiredRole && !$user->hasRole($requiredRole)) {
-            throw new UserException("Sai email hoặc mật khâu");
+        if ($requiredRoleData) {
+            $type = $requiredRoleData['type'];
+            $roles = $requiredRoleData['roles'];
+
+            if ($type === 'allow') {
+                // Phải có ít nhất một trong các role này
+                if (!$user->hasAnyRole($roles)) {
+                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                }
+            } elseif ($type === 'exclude') {
+                // Không được phép có bất kỳ role nào trong danh sách này
+                if ($user->hasAnyRole($roles)) {
+                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                }
+            }
         }
 
         $credentials = $request->only('email', 'password');
@@ -77,7 +90,12 @@ class AuthService
 
     public function me()
     {
-        return auth()->user();
+        $user = auth()->user();
+        $userData = $user->toArray();
+        $userData['roles'] = $user->getRoleNames();
+        $userData['permissions'] = $user->getAllPermissions()->pluck('name');
+
+        return $userData;
     }
 
     public function logout()

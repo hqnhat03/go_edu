@@ -51,11 +51,6 @@ class RoleSeeder extends Seeder
             'teacher_detail',
             'teacher_edit',
             'teacher_delete',
-            'admin_create',
-            'admin_list',
-            'admin_detail',
-            'admin_edit',
-            'admin_delete',
             'student_create',
             'student_list',
             'student_detail',
@@ -102,24 +97,10 @@ class RoleSeeder extends Seeder
             'guardian_detail',
             'guardian_edit',
             'guardian_delete',
+            'permission_manage'
         ]);
         $superAdmin->syncPermissions(Permission::all());
         $adminUser->assignRole($admin);
         $superAdminUser->assignRole($superAdmin);
-
-        // Gán quyền cho role teacher
-        $teacher = Role::where('name', 'teacher')->first();
-        $teacher->givePermissionTo([
-            'teacher_portal_access',
-            'lecture_create',
-            'lecture_edit',
-            'lecture_delete',
-            'exam_create',
-            'exam_edit',
-            'exam_delete',
-            'exam_grade',
-            'evaluation_manage',
-            'announcement_manage',
-        ]);
     }
 }

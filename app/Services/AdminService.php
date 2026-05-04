@@ -7,8 +7,14 @@ use App\Models\User;
 use DB;
 use Illuminate\Database\QueryException;
 
+use Illuminate\Support\Str;
+
 class AdminService
 {
+    public function __construct(protected MailService $mailService)
+    {
+    }
+
     private function formatAdmin(User $user): array
     {
         $data = $user->only([
@@ -63,8 +69,9 @@ class AdminService
 
     public function createAdmin(array $data): array
     {
+        $password = Str::random(10);
         try {
-            $user = DB::transaction(function () use ($data) {
+            $user = DB::transaction(function () use ($data, $password) {
                 $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
@@ -74,7 +81,7 @@ class AdminService
                     'date_of_birth' => $data['date_of_birth'] ?? null,
                     'avatar' => $data['avatar'] ?? null,
                     'status' => $data['status'],
-                    'password' => $data['password'] ?? 'password',
+                    'password' => $password,
                 ]);
 
                 $user->syncRoles($data['roles']);
@@ -82,11 +89,13 @@ class AdminService
                 return $user;
             });
         } catch (QueryException $e) {
-            if ($e->errorInfo[1] == '1062') {
+            if ($e->getCode() === '23505' || (isset($e->errorInfo[1]) && $e->errorInfo[1] == '1062')) {
                 throw new UserException('Email đã tồn tại');
             }
             throw $e;
         }
+
+        $this->mailService->sendAdminAccountCreatedInfo($user, $password);
 
         return $this->formatAdmin($user);
     }
@@ -146,6 +155,37 @@ class AdminService
         $user->delete();
 
         return $id;
+    }
+
+    public function getProfile(): array
+    {
+        return $this->getAdmin(auth()->id());
+    }
+
+    public function updateProfile(array $data): array
+    {
+        $user = $this->excludeRolesQuery()->where('id', auth()->id())->first();
+
+        if (!$user) {
+            throw new UserException('Không tìm thấy thông tin quản trị viên');
+        }
+
+        try {
+            DB::transaction(function () use ($user, $data) {
+                $user->update(array_filter([
+                    'name' => $data['name'] ?? null,
+                    'phone' => $data['phone'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'gender' => $data['gender'] ?? null,
+                    'date_of_birth' => $data['date_of_birth'] ?? null,
+                    'avatar' => $data['avatar'] ?? null,
+                ], fn($v) => !is_null($v)));
+            });
+        } catch (QueryException $e) {
+            throw $e;
+        }
+
+        return $this->formatAdmin($user->fresh('roles'));
     }
 
     private function excludeRolesQuery()

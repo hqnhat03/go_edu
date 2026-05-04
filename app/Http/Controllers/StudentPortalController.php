@@ -10,6 +10,20 @@ class StudentPortalController extends Controller
 {
     public function __construct(private StudentPortalService $service) {}
 
+    /** GET /student/profile */
+    public function getProfile()
+    {
+        $data = $this->service->getProfile();
+        return ApiResponse::success($data);
+    }
+
+    /** PUT /student/profile */
+    public function updateProfile(Request $request)
+    {
+        $data = $this->service->updateProfile($request->all());
+        return ApiResponse::success($data, 'Cập nhật thông tin thành công');
+    }
+
     /** GET /student/schedules/day */
     public function dailySchedules(Request $request)
     {

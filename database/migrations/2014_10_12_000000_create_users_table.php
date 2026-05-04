@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->enum('gender', ['male', 'female', 'other'])->default('male');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('phone')->nullable();
-            $table->dateTime('date_of_birth')->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->string('address')->nullable();
             $table->string('avatar')->nullable();
             $table->rememberToken();
