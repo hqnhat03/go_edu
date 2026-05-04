@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->enum('student_type', ['student', 'employee'])->default('student');
             $table->string('school')->nullable();
-            $table->string('level')->nullable();
+            $table->string('grade')->nullable();
             $table->string('work')->nullable();
             $table->string('position')->nullable();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();

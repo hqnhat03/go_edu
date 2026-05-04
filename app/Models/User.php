@@ -38,6 +38,7 @@ class User extends Authenticatable implements JWTSubject
         'phone',                 // Số điện thoại
         'address',               // Địa chỉ
         'avatar',                // Hình đại diện
+        'status',
     ];
 
     /**
@@ -46,8 +47,11 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $hidden = [
+        'email_verified_at',
         'password',
         'remember_token',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -68,5 +72,10 @@ class User extends Authenticatable implements JWTSubject
     public function teacher()
     {
         return $this->hasOne(Teacher::class);
+    }
+
+    public function guardian()
+    {
+        return $this->hasOne(Guardian::class);
     }
 }

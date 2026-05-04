@@ -2,38 +2,66 @@
 
 namespace App\Models;
 
-class Teacher extends User
+use Illuminate\Database\Eloquent\Model;
+
+class Teacher extends Model
 {
-    /**
-     * Các trường có thể được gán hàng loạt (mass assignable).
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'expertise',             // Chuyên môn
-        'experience',            // Kinh nghiệm
-        'target_student_type',   // Người học (tất cả, học sinh, nhân viên)
+        'nationality',
+        'expertise',
+        'experience',
+        'target_student',
+        'bio'
     ];
 
-    /**
-     * Ép kiểu dữ liệu (Casting).
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'date_of_birth' => 'date',
     ];
 
+    // ─── Relationships ──────────────────────────────────────────────
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     /**
-     * Mối quan hệ: Giáo viên này đang giảng dạy các lớp nào.
+     * Lớp giáo viên đang phụ trách (many-to-many).
      */
     public function teachingClasses()
     {
-        // Tuỳ vào thiết kế Database của bạn:
-        // Nếu 1 giáo viên phụ trách nhiều lớp độc lập:
-        // return $this->hasMany(Classroom::class, 'teacher_id');
+        return $this->belongsToMany(ClassRoom::class, 'class_teachers', 'teacher_id', 'class_id');
+    }
 
-        // Nếu 1 lớp có nhiều giáo viên và 1 giáo viên dạy nhiều lớp (many-to-many):
-        // return $this->belongsToMany(Classroom::class, 'class_teacher', 'teacher_id', 'class_id');
+    /**
+     * Buổi học do giáo viên tạo.
+     */
+    public function lectures()
+    {
+        return $this->hasMany(Lecture::class, 'teacher_id');
+    }
+
+    /**
+     * Bài kiểm tra do giáo viên tạo.
+     */
+    public function exams()
+    {
+        return $this->hasMany(Exam::class, 'teacher_id');
+    }
+
+    /**
+     * Đánh giá học sinh do giáo viên thực hiện.
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(StudentEvaluation::class, 'teacher_id');
+    }
+
+    /**
+     * Thông báo lớp do giáo viên đăng.
+     */
+    public function announcements()
+    {
+        return $this->hasMany(ClassAnnouncement::class, 'teacher_id');
     }
 }

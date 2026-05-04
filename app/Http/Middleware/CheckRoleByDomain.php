@@ -16,17 +16,19 @@ class CheckRoleByDomain
     public function handle(Request $request, Closure $next): Response
     {
 
-        // 1. Lấy Origin từ Header (ví dụ: http://admin.go.edu.vn)
+        // 1. Lấy Origin từ Header (ví dụ: http://goedu.demo.vn)
         $origin = $request->headers->get('origin');
 
-        // Parse để lấy host (admin.go.edu.vn)
+        // Parse để lấy host (goedu.demo.vn)
         $host = parse_url($origin, PHP_URL_HOST);
 
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
         $domainMap = [
-            'admin.go.edu.vn' => 'admin',
-            'teacher.go.edu.vn' => 'teacher',
-            'student.go.edu.vn' => 'student',
+            'goedu.demo.vn' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            'teacher-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['teacher']],
+            'student-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['student']],
+            'localhost' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            '127.0.0.1' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
         ];
 
         // Nếu domain không nằm trong danh sách quản lý, có thể chặn hoặc bỏ qua
@@ -36,10 +38,10 @@ class CheckRoleByDomain
             ], 404);
         }
 
-        $requiredRole = $domainMap[$host];
+        $requiredRoleData = $domainMap[$host];
 
         // 3. Đính kèm thông tin role yêu cầu vào request để Controller sử dụng
-        $request->attributes->add(['required_role' => $requiredRole]);
+        $request->attributes->add(['required_role' => $requiredRoleData]);
 
         return $next($request);
     }

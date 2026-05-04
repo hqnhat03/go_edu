@@ -34,29 +34,68 @@ class AuthService
 
     public function login(LoginRequest $request)
     {
-        // $data = $request->validated();
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->with(['roles', 'student', 'teacher', 'guardian'])->first();
+
+        if (!$user) {
+            throw new UserException('Sai email hoặc mật khâu');
+        }
 
         // Lấy role yêu cầu từ Middleware
-        $requiredRole = $request->attributes->get('required_role');
+        $requiredRoleData = $request->attributes->get('required_role');
 
-        if ($requiredRole && !$user->hasRole($requiredRole)) {
-            throw new UserException("Sai email hoặc mật khâu");
+        if ($requiredRoleData) {
+            $type = $requiredRoleData['type'];
+            $roles = $requiredRoleData['roles'];
+
+            if ($type === 'allow') {
+                // Phải có ít nhất một trong các role này
+                if (!$user->hasAnyRole($roles)) {
+                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                }
+            } elseif ($type === 'exclude') {
+                // Không được phép có bất kỳ role nào trong danh sách này
+                if ($user->hasAnyRole($roles)) {
+                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                }
+            }
         }
 
         $credentials = $request->only('email', 'password');
         if (!$token = auth()->attempt($credentials)) {
             throw new UserException("Sai email hoặc mật khâu");
         }
+
+        $role = $user->roles->first()?->name;
+        $id = $user->id;
+
+        if ($user->student) {
+            $id = $user->student->id;
+        } elseif ($user->teacher) {
+            $id = $user->teacher->id;
+        } elseif ($user->guardian) {
+            $id = $user->guardian->id;
+        }
+
         return [
             'access_token' => $token,
-            'refresh_token' => $token, // Using Option A: JWT acts as its own refresh token natively
+            'user' => [
+                'id' => $id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role,
+                'avatar' => $user->avatar,
+            ],
         ];
     }
 
     public function me()
     {
-        return auth()->user();
+        $user = auth()->user();
+        $userData = $user->toArray();
+        $userData['roles'] = $user->getRoleNames();
+        $userData['permissions'] = $user->getAllPermissions()->pluck('name');
+
+        return $userData;
     }
 
     public function logout()

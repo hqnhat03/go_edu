@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Http\Requests\Student;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class CreateRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => 'required',
+            'email' => 'required|unique:users,email',
+            'phone' => 'required',
+            'address' => 'required',
+            'gender' => 'required',
+            'status' => 'required|in:active,inactive',
+            'date_of_birth' => 'required',
+            'avatar' => 'nullable',
+            'student_type' => 'required',
+            'school' => 'nullable',
+            'grade' => 'nullable',
+            'work' => 'nullable',
+            'position' => 'nullable',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Họ tên không được để trống',
+            'email.required' => 'Email không được để trống',
+            'email.unique' => 'Email đã tồn tại',
+            'email.email' => 'Email không hợp lệ',
+            'phone.required' => 'Số điện thoại không được để trống',
+            'address.required' => 'Địa chỉ không được để trống',
+            'gender.required' => 'Giới tính không được để trống',
+            'status.required' => 'Trạng thái không được để trống',
+            'status.in' => 'Trạng thái không hợp lệ',
+            'date_of_birth.required' => 'Ngày sinh không được để trống',
+        ];
+    }
+}
