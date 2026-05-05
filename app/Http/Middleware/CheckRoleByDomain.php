@@ -16,17 +16,19 @@ class CheckRoleByDomain
     public function handle(Request $request, Closure $next): Response
     {
 
-        // 1. Lấy Origin từ Header (ví dụ: http://goedu.demo.vn)
+        // 1. Lấy Origin từ Header (ví dụ: http://hqnhat.id.vn)
         $origin = $request->headers->get('origin');
 
-        // Parse để lấy host (goedu.demo.vn)
+        // Parse để lấy host (hqnhat.id.vn)
         $host = parse_url($origin, PHP_URL_HOST);
 
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
+        $baseDomain = env('FRONTEND_DOMAIN', 'hqnhat.id.vn');
         $domainMap = [
-            'goedu.demo.vn' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
-            'teacher-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['teacher']],
-            'student-goedu.demo.vn' => ['type' => 'allow', 'roles' => ['student']],
+            $baseDomain => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            'teacher.' . $baseDomain => ['type' => 'allow', 'roles' => ['teacher']],
+            'student.' . $baseDomain => ['type' => 'allow', 'roles' => ['student']],
+            // DEV
             'localhost' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
             '127.0.0.1' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
         ];
