@@ -264,7 +264,7 @@ class ExamService
                         ->update([
                             'score' => $ans['score'],
                             'teacher_comment' => $ans['teacher_comment'] ?? null,
-                            'is_correct' => $ans['score'] > 0, // Đánh dấu là đúng nếu có điểm
+                            'is_correct' => DB::raw($ans['score'] > 0 ? 'true' : 'false'), // Đánh dấu là đúng nếu có điểm
                         ]);
                 }
             }

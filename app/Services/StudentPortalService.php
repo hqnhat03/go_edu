@@ -438,8 +438,22 @@ class StudentPortalService
                 'submitted_at' => $now,
             ]);
 
+            $insertData = [];
             foreach ($answerDetails as $detail) {
-                $result->details()->create($detail);
+                $detail['exam_result_id'] = $result->id;
+                $detail['created_at'] = $now;
+                $detail['updated_at'] = $now;
+                
+                if ($detail['is_correct'] === true) {
+                    $detail['is_correct'] = DB::raw('true');
+                } elseif ($detail['is_correct'] === false) {
+                    $detail['is_correct'] = DB::raw('false');
+                }
+                
+                $insertData[] = $detail;
+            }
+            if (!empty($insertData)) {
+                DB::table('exam_answer_details')->insert($insertData);
             }
 
             return [
