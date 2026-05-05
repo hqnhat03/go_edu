@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('/auth')->group(function () {
-    Route::middleware(['check.domain'])->post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
@@ -182,6 +182,7 @@ Route::middleware(['auth:api', 'role:student'])->prefix('/student')->group(funct
     Route::get('/classes/{code}/exams', [StudentPortalController::class, 'classExams']);
 
     // Exams
+    Route::get('/exams/results', [StudentPortalController::class, 'myExamResults']);
     Route::get('/exams/{id}/questions', [StudentPortalController::class, 'examQuestions']);
     Route::post('/exams/{id}/submit', [StudentPortalController::class, 'submitExam']);
     Route::get('/exams/{id}/result', [StudentPortalController::class, 'examResult']);

@@ -103,4 +103,11 @@ class StudentPortalController extends Controller
         $data = $this->service->getExamResult((int)$id);
         return ApiResponse::success($data);
     }
+
+    /** GET /student/exams/results */
+    public function myExamResults()
+    {
+        $data = $this->service->getMyExamResults();
+        return ApiResponse::success($data);
+    }
 }

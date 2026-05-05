@@ -274,6 +274,23 @@ class StudentPortalService
             ->select('id', 'name', 'duration_minutes', 'open_at', 'close_at')
             ->orderBy('created_at', 'desc')
             ->get()
+            ->map(function ($exam) use ($student) {
+                $result = ExamResult::where('exam_id', $exam->id)
+                    ->where('student_id', $student->id)
+                    ->first();
+
+                return [
+                    'id' => $exam->id,
+                    'name' => $exam->name,
+                    'duration_minutes' => $exam->duration_minutes,
+                    'open_at' => $exam->open_at,
+                    'close_at' => $exam->close_at,
+                    'has_submitted' => $result !== null,
+                    'result_id' => $result ? $result->id : null,
+                    'result_status' => $result ? $result->status : null,
+                    'score' => $result ? $result->score : null,
+                ];
+            })
             ->toArray();
     }
 
@@ -434,7 +451,7 @@ class StudentPortalService
                 'student_id' => $student->id,
                 'answers' => $answers,
                 'score' => $totalScore,
-                'status' => $hasEssay ? 'grading' : 'graded',
+                'status' => $hasEssay ? 'grading' : 'completed',
                 'submitted_at' => $now,
             ]);
 
@@ -443,13 +460,13 @@ class StudentPortalService
                 $detail['exam_result_id'] = $result->id;
                 $detail['created_at'] = $now;
                 $detail['updated_at'] = $now;
-                
+
                 if ($detail['is_correct'] === true) {
                     $detail['is_correct'] = DB::raw('true');
                 } elseif ($detail['is_correct'] === false) {
                     $detail['is_correct'] = DB::raw('false');
                 }
-                
+
                 $insertData[] = $detail;
             }
             if (!empty($insertData)) {
@@ -533,5 +550,31 @@ class StudentPortalService
                 return $detail['question'] ? $detail['question']['order_number'] : 9999;
             })->values()
         ];
+    }
+
+    /**
+     * Lấy danh sách tất cả các bài kiểm tra đã có kết quả của học sinh.
+     */
+    public function getMyExamResults(): array
+    {
+        $student = $this->currentStudent();
+
+        return ExamResult::where('student_id', $student->id)
+            ->with(['exam:id,name,class_id', 'exam.classRoom:id,class_code'])
+            ->orderBy('submitted_at', 'desc')
+            ->get()
+            ->map(function ($result) {
+                return [
+                    'id'           => $result->id,
+                    'exam_id'      => $result->exam_id,
+                    'exam_name'    => $result->exam->name ?? null,
+                    'class_code'   => $result->exam->classRoom->class_code ?? null,
+                    'score'        => $result->score,
+                    'status'       => $result->status,
+                    'submitted_at' => $result->submitted_at ? $result->submitted_at->toDateTimeString() : null,
+                    'graded_at'    => $result->graded_at ? $result->graded_at->toDateTimeString() : null,
+                ];
+            })
+            ->toArray();
     }
 }

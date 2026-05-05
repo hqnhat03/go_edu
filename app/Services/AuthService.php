@@ -50,12 +50,12 @@ class AuthService
             if ($type === 'allow') {
                 // Phải có ít nhất một trong các role này
                 if (!$user->hasAnyRole($roles)) {
-                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                    throw new UserException("Sai email hoặc mật khâu");
                 }
             } elseif ($type === 'exclude') {
                 // Không được phép có bất kỳ role nào trong danh sách này
                 if ($user->hasAnyRole($roles)) {
-                    throw new UserException("Bạn không có quyền truy cập vào hệ thống này");
+                    throw new UserException("Sai email hoặc mật khâu");
                 }
             }
         }
