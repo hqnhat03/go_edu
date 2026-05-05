@@ -47,4 +47,62 @@ class CourseRegistrationService
             $student->courses()->attach($course->id);
         });
     }
+
+    /**
+     * List registrations for admin
+     */
+    public function listRegistrations(array $filters)
+    {
+        $query = CourseRegistration::with('course')->latest();
+
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('email', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('phone', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['course_id'])) {
+            $query->where('course_id', $filters['course_id']);
+        }
+
+        $paginator = $query->paginate($filters['per_page'] ?? 15);
+
+        $paginator->getCollection()->transform(function ($item) {
+            $item->course_name = $item->course?->name;
+            unset($item->course);
+            return $item;
+        });
+
+        return $paginator;
+    }
+
+    /**
+     * Get registration detail
+     */
+    public function getRegistration(int $id)
+    {
+        $registration = CourseRegistration::with('course')->findOrFail($id);
+        $registration->course_name = $registration->course?->name;
+        unset($registration->course);
+        return $registration;
+    }
+
+    /**
+     * Update registration status
+     */
+    public function updateStatus(int $id, string $status)
+    {
+        $registration = CourseRegistration::with('course')->findOrFail($id);
+        $registration->update(['status' => $status]);
+        $registration->course_name = $registration->course?->name;
+        unset($registration->course);
+
+        return $registration;
+    }
 }

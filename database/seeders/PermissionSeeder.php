@@ -74,16 +74,18 @@ class PermissionSeeder extends Seeder
             'guardian_create',
             'guardian_detail',
             'guardian_edit',
-            'guardian_delete'
+            'guardian_delete',
+            'course_registation_list',
+            'course_registation_edit'
         ];
 
 
 
-        Permission::insert(collect($resources)->map(function ($resource) {
-            return [
+        foreach ($resources as $resource) {
+            Permission::firstOrCreate([
                 'name' => $resource,
                 'guard_name' => 'api',
-            ];
-        })->toArray());
+            ]);
+        }
     }
 }

@@ -15,7 +15,6 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-
         $roles = [
             'super_admin',
             'admin',
@@ -24,28 +23,34 @@ class RoleSeeder extends Seeder
             'teacher',
             'guardian',
         ];
-        Role::insert(collect($roles)->map(function ($role) {
-            return [
-                'name' => $role,
-                'guard_name' => 'api',
-            ];
-        })->toArray());
 
-        $adminUser = User::create([
-            'name' => 'admin',
-            'email' => 'admin@gmail.com',
-            'password' => 'password'
-        ]);
-        $superAdminUser = User::create([
-            'name' => 'super_admin',
-            'email' => 'super_admin@gmail.com',
-            'password' => 'password'
-        ]);
+        foreach ($roles as $roleName) {
+            Role::firstOrCreate([
+                'name' => $roleName,
+                'guard_name' => 'api',
+            ]);
+        }
+
+        $adminUser = User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'admin',
+                'password' => bcrypt('password')
+            ]
+        );
+
+        $superAdminUser = User::updateOrCreate(
+            ['email' => 'super_admin@gmail.com'],
+            [
+                'name' => 'super_admin',
+                'password' => bcrypt('password')
+            ]
+        );
 
         $admin = Role::where('name', 'admin')->first();
         $superAdmin = Role::where('name', 'super_admin')->first();
 
-        $admin->givePermissionTo([
+        $admin->syncPermissions([
             'teacher_create',
             'teacher_list',
             'teacher_detail',
@@ -97,8 +102,11 @@ class RoleSeeder extends Seeder
             'guardian_detail',
             'guardian_edit',
             'guardian_delete',
-            'permission_manage'
+            'permission_manage',
+            'course_registation_list',
+            'course_registation_edit'
         ]);
+
         $superAdmin->syncPermissions(Permission::all());
         $adminUser->assignRole($admin);
         $superAdminUser->assignRole($superAdmin);

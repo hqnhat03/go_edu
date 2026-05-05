@@ -23,6 +23,7 @@ use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\ClientCourseController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\StorageController;
+use App\Http\Controllers\CourseRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -139,6 +140,12 @@ Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
         Route::get('/{id}', 'show')->middleware('permission:admin_detail');
         Route::put('/{id}', 'update')->middleware('permission:admin_edit');
         Route::delete('/{id}', 'destroy')->middleware('permission:admin_delete');
+    });
+
+    Route::prefix('/course-registrations')->controller(CourseRegistrationController::class)->group(function () {
+        Route::get('/', 'index')->middleware('permission:course_registation_list');
+        Route::get('/{id}', 'show')->middleware('permission:course_registation_list');
+        Route::patch('/{id}', 'update')->middleware('permission:course_registation_edit');
     });
 
     Route::get('/permissions', [RoleController::class, 'listPermission'])->middleware('permission:role_list');
