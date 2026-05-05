@@ -19,16 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'https://' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'http://teacher.' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'https://teacher.' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'http://student.' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'https://student.' . env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
-        'http://localhost:3000', // Cho development (Next.js/Vite)
-        'http://localhost:5173',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
