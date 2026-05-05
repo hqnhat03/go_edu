@@ -23,7 +23,7 @@ class CheckRoleByDomain
         $host = parse_url($origin, PHP_URL_HOST);
 
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
-        $baseDomain = env('FRONTEND_DOMAIN', 'hqnhat.id.vn');
+        $baseDomain = config('app.frontend_domain');
         $domainMap = [
             $baseDomain => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
             'teacher.' . $baseDomain => ['type' => 'allow', 'roles' => ['teacher']],
@@ -37,6 +37,12 @@ class CheckRoleByDomain
         if (!isset($domainMap[$host])) {
             return response()->json([
                 'message' => 'Domain not found',
+                'debug' => [
+                    'host' => $host,
+                    'origin' => $origin,
+                    'base_domain' => $baseDomain,
+                    'map_keys' => array_keys($domainMap),
+                ]
             ], 404);
         }
 

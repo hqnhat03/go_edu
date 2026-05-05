@@ -57,6 +57,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'frontend_domain' => env('FRONTEND_DOMAIN', 'hqnhat.id.vn'),
+
     'asset_url' => env('ASSET_URL'),
 
     /*
