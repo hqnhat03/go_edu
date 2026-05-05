@@ -306,7 +306,7 @@ class ClassRoomService
             DB::table('course_students')
                 ->where('course_id', $class->course_id)
                 ->whereIn('student_id', $studentIds)
-                ->update(['is_assigned' => true]);
+                ->update(['is_assigned' => DB::raw('true')]);
 
             return $class->loadCount('students');
         });
