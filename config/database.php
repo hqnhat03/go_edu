@@ -77,6 +77,9 @@ return [
             'search_path' => 'public',
             'sslmode' => 'prefer',
             'prepared_statements' => false,
+            'options' => [
+                \PDO::ATTR_EMULATE_PREPARES => true,
+            ],
         ],
 
         'sqlsrv' => [

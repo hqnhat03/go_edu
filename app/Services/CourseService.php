@@ -268,7 +268,7 @@ class CourseService
 
         if (isset($params['is_assigned'])) {
             $isAssigned = filter_var($params['is_assigned'], FILTER_VALIDATE_BOOLEAN);
-            $query->wherePivot('is_assigned', $isAssigned);
+            $query->wherePivot('is_assigned', DB::raw($isAssigned ? 'true' : 'false'));
         }
 
         return $query->select([
