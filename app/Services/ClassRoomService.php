@@ -57,6 +57,7 @@ class ClassRoomService
                 'start_day' => $class->start_day,
                 'end_day' => $class->end_day,
                 'status' => $class->status,
+                'is_full' => $class->is_full,
                 'teachers' => $class->teachers->map(function ($teacher) {
                     return [
                         'id' => $teacher->id,
@@ -72,7 +73,7 @@ class ClassRoomService
     {
         $class = ClassRoom::with(['course', 'teachers', 'schedules'])->findOrFail($id);
         return [
-            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status'),
+            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
             'teachers' => $class->teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
@@ -114,6 +115,7 @@ class ClassRoomService
                     'meeting_url' => $data['meeting_url'],
                     'status' => $data['status'],
                     'course_id' => $data['course_id'],
+                    'is_full' => DB::raw('false'),
                 ]);
 
                 if (!empty($data['class_teachers'])) {
@@ -247,6 +249,7 @@ class ClassRoomService
                     ['day_of_week', 'start_time', 'end_time']
                 );
 
+                $class->refreshIsFullStatus();
                 return $class;
             });
         } catch (QueryException $e) {
@@ -257,7 +260,7 @@ class ClassRoomService
         }
 
         return [
-            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status'),
+            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
             'teachers' => $class->teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
@@ -298,7 +301,15 @@ class ClassRoomService
 
     public function assignStudents(int $id, array $studentIds)
     {
-        $class = ClassRoom::findOrFail($id);
+        $class = ClassRoom::withCount('students')->findOrFail($id);
+
+        // Kiểm tra xem có vượt quá giới hạn không
+        $currentCount = $class->students_count;
+        $newStudentsCount = count($studentIds);
+
+        if ($currentCount + $newStudentsCount > $class->max_student) {
+            throw new UserException("Lớp học đã đầy hoặc số lượng thêm vào vượt quá giới hạn cho phép");
+        }
 
         return DB::transaction(function () use ($class, $studentIds) {
             $class->students()->syncWithoutDetaching($studentIds);
@@ -307,6 +318,26 @@ class ClassRoomService
                 ->where('course_id', $class->course_id)
                 ->whereIn('student_id', $studentIds)
                 ->update(['is_assigned' => DB::raw('true')]);
+
+            $class->refreshIsFullStatus();
+
+            return $class->loadCount('students');
+        });
+    }
+
+    public function removeStudents(int $id, array $studentIds)
+    {
+        $class = ClassRoom::findOrFail($id);
+
+        return DB::transaction(function () use ($class, $studentIds) {
+            $class->students()->detach($studentIds);
+
+            DB::table('course_students')
+                ->where('course_id', $class->course_id)
+                ->whereIn('student_id', $studentIds)
+                ->update(['is_assigned' => DB::raw('false')]);
+
+            $class->refreshIsFullStatus();
 
             return $class->loadCount('students');
         });

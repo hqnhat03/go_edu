@@ -73,6 +73,13 @@ class StudentPortalController extends Controller
         return ApiResponse::success($data);
     }
 
+    /** GET /student/classes/{code}/announcements */
+    public function classAnnouncements($code)
+    {
+        $data = $this->service->getClassAnnouncements($code);
+        return ApiResponse::success($data);
+    }
+
     /** GET /student/exams/{id}/questions */
     public function examQuestions($id)
     {

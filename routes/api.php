@@ -13,6 +13,7 @@ use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\NewController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillLevelController;
 use App\Http\Controllers\StudentController;
@@ -52,6 +53,14 @@ Route::prefix('/auth')->group(function () {
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 });
+
+Route::middleware(['auth:api'])->controller(NotificationController::class)->group(function () {
+    Route::get('/notifications', 'index');
+    Route::patch('/notifications/{id}/read', 'markAsRead');
+    Route::post('/notifications/read-all', 'markAllAsRead');
+    Route::delete('/notifications/{id}', 'destroy');
+});
+
 
 
 Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
@@ -124,6 +133,7 @@ Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
         Route::put('/{id}', 'update')->middleware('permission:class_edit');
         Route::delete('/{id}', 'destroy')->middleware('permission:class_delete');
         Route::post('/{id}/assign-students', 'assignStudents')->middleware('permission:class_edit');
+        Route::post('/{id}/remove-students', 'removeStudents')->middleware('permission:class_edit');
     });
 
     Route::prefix('/news')->controller(NewController::class)->group(function () {
@@ -186,6 +196,7 @@ Route::middleware(['auth:api', 'role:student'])->prefix('/student')->group(funct
     Route::get('/classes/{code}/lectures', [StudentPortalController::class, 'classLectures']);
     Route::get('/classes/{code}/lectures/{id}', [StudentPortalController::class, 'lectureDetail']);
     Route::get('/classes/{code}/exams', [StudentPortalController::class, 'classExams']);
+    Route::get('/classes/{code}/announcements', [StudentPortalController::class, 'classAnnouncements']);
 
     // Exams
     Route::get('/exams/results', [StudentPortalController::class, 'myExamResults']);

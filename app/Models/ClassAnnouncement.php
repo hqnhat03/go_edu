@@ -15,7 +15,6 @@ class ClassAnnouncement extends Model
     ];
 
     protected $casts = [
-        'is_pinned' => 'boolean',
     ];
 
     // ─── Relationships ──────────────────────────────────────────────

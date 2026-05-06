@@ -295,6 +295,29 @@ class StudentPortalService
     }
 
     /**
+     * Lấy danh sách thông báo của lớp.
+     */
+    public function getClassAnnouncements(string $code): array
+    {
+        $student = $this->currentStudent();
+
+        $class = $student->classes()
+            ->where('class_code', $code)
+            ->first();
+
+        if (!$class) {
+            throw new UserException('Không tìm thấy lớp học hoặc bạn không có quyền truy cập.');
+        }
+
+        return \App\Models\ClassAnnouncement::where('class_id', $class->id)
+            ->with('teacher.user:id,name,avatar')
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->toArray();
+    }
+
+    /**
      * Lấy danh sách câu hỏi của bài kiểm tra.
      */
     public function getExamQuestions(int $id): array

@@ -57,4 +57,14 @@ class ClassRoomController extends Controller
         $data = $this->classRoomService->assignStudents($id, $request->student_ids);
         return ApiResponse::success($data, 'Thêm học sinh vào lớp thành công');
     }
+
+    public function removeStudents(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'student_ids' => 'required|array',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+        $data = $this->classRoomService->removeStudents($id, $request->student_ids);
+        return ApiResponse::success($data, 'Xóa học sinh khỏi lớp thành công');
+    }
 }

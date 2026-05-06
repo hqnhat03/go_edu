@@ -16,7 +16,8 @@ class ClassRoom extends Model
         'max_student',
         'meeting_url',
         'status',
-        'course_id'
+        'course_id',
+        'is_full'
     ];
 
     public function course()
@@ -52,5 +53,13 @@ class ClassRoom extends Model
     public function exams()
     {
         return $this->hasMany(Exam::class, 'class_id');
+    }
+
+    public function refreshIsFullStatus()
+    {
+        $isFull = $this->students()->count() >= $this->max_student;
+        $this->update([
+            'is_full' => $isFull ? \DB::raw('true') : \DB::raw('false')
+        ]);
     }
 }

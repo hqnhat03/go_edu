@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Exceptions\UserException;
 use App\Models\ClassAnnouncement;
+use App\Models\ClassRoom;
 use App\Models\Teacher;
+use App\Notifications\ClassAnnouncementCreated;
+use DB;
 use Illuminate\Support\Facades\Auth;
 
 class AnnouncementService
@@ -28,6 +31,10 @@ class AnnouncementService
             ->orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get()
+            ->map(function ($item) {
+                $item->is_pinned = (bool)$item->is_pinned;
+                return $item;
+            })
             ->toArray();
     }
 
@@ -39,14 +46,31 @@ class AnnouncementService
         $teacher = $this->currentTeacher();
 
         $announcement = ClassAnnouncement::create([
-            'class_id'   => $classId,
+            'class_id' => $classId,
             'teacher_id' => $teacher->id,
-            'title'      => $data['title'],
-            'content'    => $data['content'],
-            'is_pinned'  => $data['is_pinned'] ?? false,
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'is_pinned' => $data['is_pinned'] ? DB::raw('true') : DB::raw('false')
         ]);
 
-        return $announcement->load('teacher.user')->toArray();
+        $announcement->load(['classRoom', 'teacher.user']);
+
+
+        // Gửi thông báo cho toàn bộ học sinh trong lớp
+        $students = ClassRoom::find($classId)->students()->with('user')->get();
+        foreach ($students as $student) {
+            if ($student->user) {
+                $student->user->notify(new ClassAnnouncementCreated($announcement));
+            }
+        }
+
+        $announcement = $announcement->fresh();
+        $announcement->load(['teacher.user:id,name,avatar']);
+        
+        $result = $announcement->toArray();
+        $result['is_pinned'] = (bool)$result['is_pinned'];
+
+        return $result;
     }
 
     /**
@@ -54,18 +78,25 @@ class AnnouncementService
      */
     public function update(array $data, int $announcementId): array
     {
-        $teacher      = $this->currentTeacher();
+        $teacher = $this->currentTeacher();
         $announcement = ClassAnnouncement::where('id', $announcementId)
             ->where('teacher_id', $teacher->id)
             ->firstOrFail();
 
-        $announcement->update(array_filter([
-            'title'     => $data['title']     ?? null,
-            'content'   => $data['content']   ?? null,
-            'is_pinned' => $data['is_pinned'] ?? null,
-        ], fn($v) => !is_null($v)));
+        // Tạo mảng dữ liệu cần cập nhật
+        $announcement->update([
+            'title' => $data['title'] ?? $announcement->title,
+            'content' => $data['content'] ?? $announcement->content,
+            'is_pinned' => ($data['is_pinned'] ?? $announcement->is_pinned) ? DB::raw('true') : DB::raw('false'),
+        ]);
 
-        return $announcement->fresh()->toArray();
+        $announcement = $announcement->fresh();
+        $announcement->load(['teacher.user:id,name,avatar']);
+        
+        $result = $announcement->toArray();
+        $result['is_pinned'] = (bool)$result['is_pinned'];
+
+        return $result;
     }
 
     /**
@@ -73,7 +104,7 @@ class AnnouncementService
      */
     public function delete(int $announcementId): int
     {
-        $teacher      = $this->currentTeacher();
+        $teacher = $this->currentTeacher();
         $announcement = ClassAnnouncement::where('id', $announcementId)
             ->where('teacher_id', $teacher->id)
             ->firstOrFail();

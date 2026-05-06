@@ -117,11 +117,21 @@ class CourseService
 
     public function findPublicBySlug($slug)
     {
-        $course = Course::with(['subject', 'classRooms.teachers.user', 'classRooms.schedules'])
-            ->withCount('classRooms')
+        $course = Course::with([
+            'subject',
+            'classRooms' => function ($q) {
+                $q->where('status', 'published')->with(['teachers.user', 'schedules']);
+            }
+        ])
+            ->withCount([
+                'classRooms' => function ($q) {
+                    $q->where('status', 'published');
+                }
+            ])
             ->withCount([
                 'classRooms as enrolled_students_count' => function ($q) {
-                    $q->join('class_students', 'class_rooms.id', '=', 'class_students.class_id');
+                    $q->where('class_rooms.status', 'published')
+                        ->join('class_students', 'class_rooms.id', '=', 'class_students.class_id');
                 }
             ])
             ->where('status', 'published')
@@ -151,7 +161,7 @@ class CourseService
                 'class_code' => $classRoom->class_code,
                 'start_day' => $classRoom->start_day,
                 'end_day' => $classRoom->end_day,
-                'status' => $classRoom->status,
+                'is_full' => $classRoom->is_full,
                 'teachers' => $teachers,
                 'schedules' => $schedules,
             ];
