@@ -33,7 +33,7 @@ class CourseRegistrationController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled',
+            'status' => 'required|in:pending,completed,cancelled',
         ]);
 
         $data = $this->registrationService->updateStatus($id, $request->status);

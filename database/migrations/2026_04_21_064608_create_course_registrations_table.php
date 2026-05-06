@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('email');
             $table->string('phone');
-            $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }
