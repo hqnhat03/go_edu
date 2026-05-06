@@ -103,8 +103,8 @@ class RoleSeeder extends Seeder
             'guardian_edit',
             'guardian_delete',
             'permission_manage',
-            'course_registation_list',
-            'course_registation_edit'
+            'course_registration_list',
+            'course_registration_edit'
         ]);
 
         $superAdmin->syncPermissions(Permission::all());

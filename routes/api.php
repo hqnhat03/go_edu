@@ -143,9 +143,8 @@ Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
     });
 
     Route::prefix('/course-registrations')->controller(CourseRegistrationController::class)->group(function () {
-        Route::get('/', 'index')->middleware('permission:course_registation_list');
-        Route::get('/{id}', 'show')->middleware('permission:course_registation_list');
-        Route::patch('/{id}', 'update')->middleware('permission:course_registation_edit');
+        Route::get('/', 'index')->middleware('permission:course_registration_list');
+        Route::patch('/{id}', 'update')->middleware('permission:course_registration_edit');
     });
 
     Route::get('/permissions', [RoleController::class, 'listPermission'])->middleware('permission:role_list');
