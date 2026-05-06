@@ -48,4 +48,12 @@ class Student extends Model
     {
         return $this->belongsToMany(ClassRoom::class, 'class_students', 'student_id', 'class_id');
     }
+
+    /**
+     * Danh sách điểm danh của học sinh.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

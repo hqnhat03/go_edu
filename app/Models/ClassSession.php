@@ -22,4 +22,12 @@ class ClassSession extends Model
     {
         return $this->belongsTo(ClassRoom::class, 'class_id');
     }
+
+    /**
+     * Danh sách điểm danh của buổi học này.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'class_session_id');
+    }
 }

@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 
 class TeacherPortalController extends Controller
 {
-    public function __construct(private TeacherPortalService $service) {}
+    public function __construct(private TeacherPortalService $service)
+    {
+    }
 
     /** GET /teacher/profile */
     public function getProfile()

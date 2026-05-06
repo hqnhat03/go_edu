@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassRoomController;
 use App\Http\Controllers\CourseController;
@@ -235,6 +236,10 @@ Route::middleware(['auth:api', 'role:teacher'])->prefix('/teacher')->group(funct
     Route::put('/lectures/{id}', [LectureController::class, 'update']);
     Route::delete('/lectures/{id}', [LectureController::class, 'destroy']);
 
+    // Attendance (điểm danh)
+    Route::get('/sessions/{sessionId}/students', [AttendanceController::class, 'getStudents']);
+    Route::post('/sessions/{sessionId}/attendance', [AttendanceController::class, 'submitAttendance']);
+
     // Exams (bài kiểm tra)
     Route::get('/classes/{classId}/exams', [ExamController::class, 'getByClass']);
     Route::get('/exams', [ExamController::class, 'index']);
@@ -242,7 +247,7 @@ Route::middleware(['auth:api', 'role:teacher'])->prefix('/teacher')->group(funct
     Route::get('/exams/{id}', [ExamController::class, 'show']);
     Route::put('/exams/{id}', [ExamController::class, 'update']);
     Route::delete('/exams/{id}', [ExamController::class, 'destroy']);
-
+    Route::get('', [ExamController::class, '']);
     // Exam Questions (câu hỏi)
     Route::get('/exams/{examId}/questions', [ExamController::class, 'getQuestions']);
     Route::put('/exams/{examId}/questions', [ExamController::class, 'syncQuestions']);
