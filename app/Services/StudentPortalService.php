@@ -80,9 +80,15 @@ class StudentPortalService
 
         return ClassSession::query()
             ->join('class_rooms', 'class_sessions.class_id', '=', 'class_rooms.id')
+            ->join('courses', 'class_rooms.course_id', '=', 'courses.id')
             ->whereIn('class_sessions.class_id', $classIds)
             ->where('class_sessions.date', $date)
-            ->select('class_sessions.*', 'class_rooms.class_code', 'class_rooms.meeting_url')
+            ->select(
+                'class_sessions.*',
+                'class_rooms.class_code',
+                'class_rooms.meeting_url',
+                'courses.name as course_name'
+            )
             ->orderBy('class_sessions.start_time', 'asc')
             ->get()
             ->toArray();
@@ -122,7 +128,9 @@ class StudentPortalService
             ->with([
                 'teachers:id,user_id',
                 'teachers.user:id,name,avatar',
-                'schedules'
+                'schedules',
+                'course:id,name,image_url,subject_id',
+                'course.subject:id,name'
             ])
             ->get()
             ->map(function ($class) {
@@ -137,7 +145,10 @@ class StudentPortalService
                             'avatar' => $teacher->user->avatar ?? null,
                         ];
                     }),
-                    'schedules' => $class->schedules
+                    'schedules' => $class->schedules,
+                    'course_name' => $class->course->name ?? null,
+                    'image_url' => $class->course->image_url ?? null,
+                    'subject_name' => $class->course->subject->name ?? null,
                 ];
             })
             ->toArray();

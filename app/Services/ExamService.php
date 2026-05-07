@@ -53,10 +53,22 @@ class ExamService
             $query->where('class_id', $data['class_id']);
         }
 
-        return $query->withCount('questions')
+        return $query->with(['classRoom' => function ($q) {
+            $q->select('id', 'class_code', 'course_id')->with('course:id,name');
+        }])
+            ->withCount('questions')
             ->withCount('results')
             ->orderBy('created_at', 'desc')
             ->get()
+            ->map(function ($exam) {
+                $data = $exam->toArray();
+                $data['class'] = [
+                    'class_code' => $exam->classRoom->class_code ?? null,
+                    'course_name' => $exam->classRoom->course->name ?? null,
+                ];
+                unset($data['class_room']);
+                return $data;
+            })
             ->toArray();
     }
 
@@ -67,7 +79,8 @@ class ExamService
     {
         $teacher = $this->currentTeacher();
 
-        $totalStudents = \App\Models\ClassRoom::findOrFail($classId)->students()->count();
+        $classRoom = \App\Models\ClassRoom::findOrFail($classId);
+        $totalStudents = $classRoom->students()->count();
 
         $exams = Exam::where('teacher_id', $teacher->id)
             ->where('class_id', $classId)
@@ -76,6 +89,11 @@ class ExamService
             ->orderBy('created_at', 'desc')
             ->get()
             ->makeHidden(['class_id', 'teacher_id', 'duration_minutes', 'open_at', 'close_at'])
+            ->map(function ($exam) use ($classRoom) {
+                $data = $exam->toArray();
+                $data['class_code'] = $classRoom->class_code;
+                return $data;
+            })
             ->toArray();
 
         return [
@@ -90,7 +108,16 @@ class ExamService
     public function detail(int $examId): array
     {
         $exam = $this->findOwnExam($examId);
-        return $exam->load('questions')->toArray();
+        $exam->load(['questions', 'classRoom' => function ($q) {
+            $q->select('id', 'class_code', 'course_id')->with('course:id,name');
+        }]);
+        $data = $exam->toArray();
+        $data['class'] = [
+            'class_code' => $exam->classRoom->class_code ?? null,
+            'course_name' => $exam->classRoom->course->name ?? null,
+        ];
+        unset($data['class_room']);
+        return $data;
     }
 
     /**

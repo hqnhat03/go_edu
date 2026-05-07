@@ -174,6 +174,7 @@ Route::prefix('/common')->group(function () {
 
 // Public / Client endpoints (No login required)
 Route::prefix('/student')->group(function () {
+    Route::get('/courses/popular', [ClientCourseController::class, 'popular']);
     Route::get('/courses', [ClientCourseController::class, 'index']);
     Route::get('/courses/{slug}', [ClientCourseController::class, 'show']);
     Route::post('/courses/{id}/register', [ClientCourseController::class, 'register']);

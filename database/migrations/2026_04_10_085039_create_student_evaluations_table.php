@@ -14,9 +14,13 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
             $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();
-            $table->integer('score');
-            $table->text('comment');
+            $table->foreignId('teacher_id')->constrained('teachers')->cascadeOnDelete();
+            $table->enum('rating', ['unsatisfactory', 'satisfactory', 'good', 'excellent']);
+            $table->text('comment')->nullable();
             $table->timestamps();
+
+            // Đảm bảo mỗi học sinh chỉ có 1 đánh giá trong 1 lớp học
+            $table->unique(['student_id', 'class_id']);
         });
     }
 

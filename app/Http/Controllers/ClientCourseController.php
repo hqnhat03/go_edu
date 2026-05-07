@@ -35,6 +35,16 @@ class ClientCourseController extends Controller
     }
 
     /**
+     * Lấy 4 khóa học phổ biến
+     */
+    public function popular()
+    {
+        $courses = $this->courseService->getPopular();
+
+        return ApiResponse::success($courses, 'Lấy danh sách khóa học phổ biến thành công');
+    }
+
+    /**
      * Lấy thông tin chi tiết một khóa học theo slug
      */
     public function show($slug)

@@ -65,27 +65,7 @@ class AuthService
             throw new UserException("Sai email hoặc mật khâu");
         }
 
-        $role = $user->roles->first()?->name;
-        $id = $user->id;
-
-        if ($user->student) {
-            $id = $user->student->id;
-        } elseif ($user->teacher) {
-            $id = $user->teacher->id;
-        } elseif ($user->guardian) {
-            $id = $user->guardian->id;
-        }
-
-        return [
-            'access_token' => $token,
-            'user' => [
-                'id' => $id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $role,
-                'avatar' => $user->avatar,
-            ],
-        ];
+        return $this->formatAuthResponse($token, $user);
     }
 
     public function me()
@@ -149,10 +129,40 @@ class AuthService
     public function refreshToken()
     {
         try {
-            return auth()->refresh();
+            $newToken = auth()->refresh();
+            $user = auth()->setToken($newToken)->user();
+
+            return $this->formatAuthResponse($newToken, $user);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            throw new \Exception("Token đã hết hạn hoàn toàn, vui lòng đăng nhập lại.");
         } catch (\Exception $e) {
-            throw new \Exception("Could not refresh token. " . $e->getMessage());
+            throw new \Exception("Không thể làm mới token: " . $e->getMessage());
         }
+    }
+
+    private function formatAuthResponse($token, $user)
+    {
+        $role = $user->roles->first()?->name;
+        $id = $user->id;
+
+        if ($user->student) {
+            $id = $user->student->id;
+        } elseif ($user->teacher) {
+            $id = $user->teacher->id;
+        } elseif ($user->guardian) {
+            $id = $user->guardian->id;
+        }
+
+        return [
+            'access_token' => $token,
+            'user' => [
+                'id' => $id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role,
+                'avatar' => $user->avatar,
+            ],
+        ];
     }
 
     public function changePassword($user, $data)

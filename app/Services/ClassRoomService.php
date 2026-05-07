@@ -141,32 +141,7 @@ class ClassRoomService
                     $class->schedules()->createMany($schedules);
                 }
 
-                $sessions = [];
-
-                $start = Carbon::parse($class->start_day);
-                $end = Carbon::parse($class->end_day);
-
-                foreach ($schedules as $schedule) {
-                    $current = $start->copy();
-
-                    while ($current->lte($end)) {
-                        if ($current->dayOfWeek == $schedule['day_of_week']) {
-                            $sessions[] = [
-                                'class_id' => $class->id,
-                                'date' => $current->toDateString(),
-                                'start_time' => $schedule['start_time'],
-                                'end_time' => $schedule['end_time'],
-                                'status' => 'scheduled',
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
-                        }
-                        $current->addDay();
-                    }
-                }
-
-                // bulk insert
-                ClassSession::insert($sessions);
+                $this->generateSessions($class, $schedules);
                 return $class;
             });
         } catch (QueryException $e) {
@@ -248,6 +223,10 @@ class ClassRoomService
                     ['id'],
                     ['day_of_week', 'start_time', 'end_time']
                 );
+
+                // Xóa sessions cũ và tạo lại
+                ClassSession::where('class_id', $class->id)->delete();
+                $this->generateSessions($class, $class_schedules);
 
                 $class->refreshIsFullStatus();
                 return $class;
@@ -341,5 +320,35 @@ class ClassRoomService
 
             return $class->loadCount('students');
         });
+    }
+
+    private function generateSessions(ClassRoom $class, array $schedules)
+    {
+        $sessions = [];
+        $start = Carbon::parse($class->start_day);
+        $end = Carbon::parse($class->end_day);
+
+        foreach ($schedules as $schedule) {
+            $current = $start->copy();
+
+            while ($current->lte($end)) {
+                if ($current->dayOfWeek == $schedule['day_of_week']) {
+                    $sessions[] = [
+                        'class_id' => $class->id,
+                        'date' => $current->toDateString(),
+                        'start_time' => $schedule['start_time'],
+                        'end_time' => $schedule['end_time'],
+                        'status' => 'scheduled',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                $current->addDay();
+            }
+        }
+
+        if (!empty($sessions)) {
+            ClassSession::insert($sessions);
+        }
     }
 }

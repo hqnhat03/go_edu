@@ -15,7 +15,8 @@ class CourseService
     public function getList(array $params)
     {
         $query = Course::query()->join('levels', 'courses.level_id', '=', 'levels.id')
-            ->join('subjects', 'courses.subject_id', '=', 'subjects.id');
+            ->join('subjects', 'courses.subject_id', '=', 'subjects.id')
+            ->latest('courses.created_at');
 
         if (isset($params['name'])) {
             $query->where('courses.name', 'like', '%' . $params['name'] . '%');
@@ -63,56 +64,75 @@ class CourseService
     public function getPublicList(array $params)
     {
         $query = Course::query()
-            ->with(['classRooms.teachers.user'])
-            ->withCount('classRooms')
+            ->with(['classRooms.teachers.user', 'level', 'subject'])
+            ->withCount(['classRooms', 'students as student_count'])
             ->where('status', 'published');
 
+        // Filter by name
         if (isset($params['name'])) {
             $query->where('name', 'like', '%' . $params['name'] . '%');
         }
 
+        // Filter by target student
         if (isset($params['target_student'])) {
             $query->where('target_student', $params['target_student']);
         }
 
+        // Filter by subject
         if (isset($params['subject_id'])) {
             $query->where('subject_id', $params['subject_id']);
         }
 
+        // Filter by level
         if (isset($params['level_id'])) {
             $query->where('level_id', $params['level_id']);
         }
 
+        // Filter by education level
         if (isset($params['education_level'])) {
             $query->whereHas('level', function ($q) use ($params) {
                 $q->where('education_level', $params['education_level']);
             });
         }
 
+        // Sorting logic
+        $sort = $params['sort'] ?? 'latest';
+        switch ($sort) {
+            case 'popular':
+                $query->orderBy('student_count', 'desc');
+                break;
+            case 'price-asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price-desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->latest();
+                break;
+        }
+
         $limit = $params['limit'] ?? 10;
         $courses = $query->paginate($limit);
 
         $courses->getCollection()->transform(function ($course) {
-            $teachers = collect();
-            if ($course->relationLoaded('classRooms')) {
-                foreach ($course->classRooms as $classRoom) {
-                    foreach ($classRoom->teachers as $teacher) {
-                        if ($teacher->user) {
-                            $teachers->push([
-                                'id' => $teacher->id,
-                                'name' => $teacher->user->name,
-                                'avatar' => $teacher->user->avatar,
-                            ]);
-                        }
-                    }
-                }
-                $course->setAttribute('teachers', $teachers->unique('id')->values()->all());
-                $course->makeHidden('classRooms');
-            }
-            return $course;
+            return $this->transform($course);
         });
 
         return $courses;
+    }
+
+    public function getPopular()
+    {
+        return Course::query()
+            ->with(['level', 'subject', 'classRooms.teachers.user'])
+            ->withCount('students as student_count')
+            ->where('status', 'published')
+            ->orderBy('student_count', 'desc')
+            ->limit(4)
+            ->get()
+            ->map(fn($course) => $this->transform($course));
     }
 
     public function findPublicBySlug($slug)
@@ -302,20 +322,37 @@ class CourseService
      */
     private function transform(Course $course, bool $full = false): array
     {
+        $teachers = collect();
+        if ($course->relationLoaded('classRooms')) {
+            foreach ($course->classRooms as $classRoom) {
+                foreach ($classRoom->teachers as $teacher) {
+                    if ($teacher->user) {
+                        $teachers->push([
+                            'id' => $teacher->id,
+                            'name' => $teacher->user->name,
+                            'avatar' => $teacher->user->avatar,
+                        ]);
+                    }
+                }
+            }
+        }
+
         $data = [
             'id' => $course->id,
             'name' => $course->name,
-            'status' => $course->status,
+            'slug' => $course->slug,
             'image_url' => $course->image_url,
             'price' => $course->price,
             'level' => $course->level?->level,
             'subject' => $course->subject?->name,
-            'class_rooms_count' => $course->class_rooms_count ?? 0,
             'student_count' => $course->student_count ?? 0,
+            'teachers' => $teachers->unique('id')->values()->all(),
         ];
 
         if ($full) {
             $data = array_merge($data, [
+                'status' => $course->status,
+                'class_rooms_count' => $course->class_rooms_count ?? 0,
                 'target_student' => $course->target_student,
                 'lesson_count' => $course->lesson_count,
                 'completion_time' => $course->completion_time,

@@ -10,15 +10,12 @@ class StudentEvaluation extends Model
         'student_id',
         'class_id',
         'teacher_id',
-        'type',
-        'score',
+        'rating',
         'comment',
-        'evaluated_at',
     ];
 
     protected $casts = [
-        'evaluated_at' => 'date',
-        'score'        => 'integer',
+        'rating' => 'string',
     ];
 
     // ─── Relationships ──────────────────────────────────────────────

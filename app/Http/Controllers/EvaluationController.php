@@ -21,11 +21,9 @@ class EvaluationController extends Controller
     public function store(Request $request, $classId)
     {
         $request->validate([
-            'student_id'   => 'required|integer|exists:students,id',
-            'type'         => 'nullable|in:midterm,final,behavior',
-            'score'        => 'required|integer|min:0|max:100',
-            'comment'      => 'nullable|string',
-            'evaluated_at' => 'nullable|date',
+            'student_id' => 'required|integer|exists:students,id',
+            'rating'     => 'required|string|in:unsatisfactory,satisfactory,good,excellent',
+            'comment'    => 'nullable|string',
         ]);
 
         $data = $this->service->create($request->all(), (int) $classId);
@@ -36,10 +34,8 @@ class EvaluationController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'type'         => 'nullable|in:midterm,final,behavior',
-            'score'        => 'nullable|integer|min:0|max:100',
-            'comment'      => 'nullable|string',
-            'evaluated_at' => 'nullable|date',
+            'rating'  => 'nullable|string|in:unsatisfactory,satisfactory,good,excellent',
+            'comment' => 'nullable|string',
         ]);
 
         $data = $this->service->update($request->all(), (int) $id);

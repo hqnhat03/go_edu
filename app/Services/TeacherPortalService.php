@@ -73,7 +73,9 @@ class TeacherPortalService
     public function getDailySchedules(array $params): array
     {
         $teacher = $this->currentTeacher();
-        $classIds = $teacher->teachingClasses()->pluck('class_rooms.id');
+        $classIds = $teacher->teachingClasses()
+            ->where('class_rooms.status', 'published')
+            ->pluck('class_rooms.id');
 
         $date = $params['date'] ?? now()->toDateString();
 
@@ -93,7 +95,9 @@ class TeacherPortalService
     public function getWeeklySchedules(array $params): array
     {
         $teacher = $this->currentTeacher();
-        $classIds = $teacher->teachingClasses()->pluck('class_rooms.id');
+        $classIds = $teacher->teachingClasses()
+            ->where('class_rooms.status', 'published')
+            ->pluck('class_rooms.id');
 
         $date = isset($params['date']) ? Carbon::parse($params['date']) : now();
         $startOfWeek = $date->copy()->startOfWeek()->toDateString();
@@ -125,7 +129,11 @@ class TeacherPortalService
 
         if (!empty($param['status'])) {
             $query->where('class_rooms.status', $param['status']);
+        } else {
+            // Mặc định xem cả published và archived, ẩn draft
+            $query->whereIn('class_rooms.status', ['published', 'archived']);
         }
+
         if (!empty($param['search'])) {
             $query->where('class_rooms.class_code', 'like', '%' . $param['search'] . '%');
         }
@@ -151,6 +159,7 @@ class TeacherPortalService
         $teacher = $this->currentTeacher();
 
         $class = $teacher->teachingClasses()
+            ->whereIn('class_rooms.status', ['published', 'archived'])
             ->with([
                 'course:id,name',
                 'schedules',
@@ -200,7 +209,10 @@ class TeacherPortalService
     public function deleteSession(int $sessionId): bool
     {
         $teacher = $this->currentTeacher();
-        $classIds = $teacher->teachingClasses()->pluck('class_rooms.id')->toArray();
+        $classIds = $teacher->teachingClasses()
+            ->where('class_rooms.status', 'published')
+            ->pluck('class_rooms.id')
+            ->toArray();
 
         $session = ClassSession::where('id', $sessionId)
             ->whereIn('class_id', $classIds)
@@ -219,7 +231,9 @@ class TeacherPortalService
     public function getDashboardStats(): array
     {
         $teacher = $this->currentTeacher();
-        $classIds = $teacher->teachingClasses()->pluck('class_rooms.id');
+        $classIds = $teacher->teachingClasses()
+            ->where('class_rooms.status', 'published')
+            ->pluck('class_rooms.id');
 
         $totalClasses = $classIds->count();
 

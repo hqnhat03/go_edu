@@ -103,11 +103,8 @@ class AuthController extends Controller
     public function refreshToken()
     {
         try {
-            $token = $this->authService->refreshToken();
-            return ApiResponse::success([
-                'access_token' => $token,
-                'refresh_token' => $token
-            ], "Token refreshed successfully");
+            $data = $this->authService->refreshToken();
+            return ApiResponse::success($data, "Token refreshed successfully");
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), [], 401);
         }
