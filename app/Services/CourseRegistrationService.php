@@ -53,7 +53,7 @@ class CourseRegistrationService
      */
     public function listRegistrations(array $filters)
     {
-        $query = CourseRegistration::with('course')->latest();
+        $query = CourseRegistration::with('course');
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
@@ -69,6 +69,17 @@ class CourseRegistrationService
 
         if (!empty($filters['course_id'])) {
             $query->where('course_id', $filters['course_id']);
+        }
+
+        // Sorting
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'status', 'created_at', 'course_id'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
         }
 
         $paginator = $query->paginate($filters['per_page'] ?? 15);

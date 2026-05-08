@@ -74,18 +74,42 @@ class TeacherService
 
     function listTeacher(array $param)
     {
-        $teacher = Teacher::query()->join('users', 'users.id', '=', 'teachers.user_id');
+        $query = Teacher::query()->join('users', 'users.id', '=', 'teachers.user_id');
+
         if (isset($param['search'])) {
-            $teacher->where('users.name', 'like', '%' . $param['search'] . '%')
-                ->orWhere('users.email', 'like', '%' . $param['search'] . '%');
+            $query->where(function ($q) use ($param) {
+                $q->whereRaw('unaccent(users.name) ilike unaccent(?)', ["%{$param['search']}%"])
+                    ->orWhere('users.email', 'like', '%' . $param['search'] . '%');
+            });
         }
-        if (isset($param['status'])) {
-            $teacher->where('users.status', $param['status']);
+        if (isset($param['status']) && $param['status'] !== 'all') {
+            $query->where('users.status', $param['status']);
         }
         if (isset($param['expertise'])) {
-            $teacher->where('expertise', 'like', '%' . $param['expertise'] . '%');
+            $query->where('expertise', 'like', '%' . $param['expertise'] . '%');
         }
-        return $teacher->select([
+
+        // Sorting
+        $sortBy = $param['sort_by'] ?? 'created_at';
+        $sortOrder = $param['sort_order'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'status', 'created_at', 'expertise', 'target_student'];
+        
+        if (in_array($sortBy, $allowedSortFields)) {
+            if (in_array($sortBy, ['name', 'email', 'phone', 'status'])) {
+                $query->orderBy("users.$sortBy", $sortOrder);
+            } elseif ($sortBy === 'created_at') {
+                $query->orderBy("users.created_at", $sortOrder);
+            } else {
+                $query->orderBy("teachers.$sortBy", $sortOrder);
+            }
+        } else {
+            $query->latest('users.created_at');
+        }
+
+        $limit = $param['limit'] ?? 10;
+
+        return $query->select([
             'teachers.id',
             'teachers.expertise',
             'teachers.target_student',
@@ -94,7 +118,7 @@ class TeacherService
             'users.phone',
             'users.status',
             'users.avatar'
-        ])->get();
+        ])->paginate($limit);
     }
 
     function updateTeacher(array $data, $id)

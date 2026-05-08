@@ -33,7 +33,7 @@ class ClassRoomService
         }
 
         if (isset($params['class_code'])) {
-            $query->where('class_code', 'like', '%' . $params['class_code'] . '%');
+            $query->whereRaw('unaccent(class_code) ilike unaccent(?)', ["%{$params['class_code']}%"]);
         }
 
         if (isset($params['status'])) {
@@ -42,7 +42,7 @@ class ClassRoomService
 
         if (isset($params['teacher_name'])) {
             $query->whereHas('teachers.user', function ($q) use ($params) {
-                $q->where('name', 'like', '%' . $params['teacher_name'] . '%');
+                $q->whereRaw('unaccent(name) ilike unaccent(?)', ["%{$params['teacher_name']}%"]);
             });
         }
 

@@ -18,8 +18,13 @@ class TeacherController extends Controller
 
     public function index(Request $request)
     {
-        $data = $this->teacherService->listTeacher($request->all());
-        return ApiResponse::success($data);
+        $teachers = $this->teacherService->listTeacher($request->all());
+        return ApiResponse::success($teachers->items(), 'Lấy danh sách giáo viên thành công', [
+            'total' => $teachers->total(),
+            'per_page' => $teachers->perPage(),
+            'current_page' => $teachers->currentPage(),
+            'last_page' => $teachers->lastPage()
+        ]);
     }
 
     public function store(CreateRequest $request)

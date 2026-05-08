@@ -14,12 +14,12 @@ class CourseService
 {
     public function getList(array $params)
     {
-        $query = Course::query()->join('levels', 'courses.level_id', '=', 'levels.id')
-            ->join('subjects', 'courses.subject_id', '=', 'subjects.id')
-            ->latest('courses.created_at');
+        $query = Course::query()
+            ->join('levels', 'courses.level_id', '=', 'levels.id')
+            ->join('subjects', 'courses.subject_id', '=', 'subjects.id');
 
         if (isset($params['name'])) {
-            $query->where('courses.name', 'like', '%' . $params['name'] . '%');
+            $query->whereRaw('unaccent(courses.name) ilike unaccent(?)', ["%{$params['name']}%"]);
         }
 
         if (isset($params['status'])) {
@@ -42,14 +42,34 @@ class CourseService
             $query->where('levels.education_level', $params['education_level']);
         }
 
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortOrder = $params['sort_order'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'name', 'status', 'target_student', 'created_at', 'level_name', 'subject_name'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            if ($sortBy === 'level_name') {
+                $query->orderBy('levels.level', $sortOrder);
+            } elseif ($sortBy === 'subject_name') {
+                $query->orderBy('subjects.name', $sortOrder);
+            } else {
+                $query->orderBy("courses.$sortBy", $sortOrder);
+            }
+        } else {
+            $query->latest('courses.created_at');
+        }
+
+        $limit = $params['limit'] ?? 10;
+
         return $query->select([
             'courses.id',
             'courses.name',
             'courses.status',
             'courses.target_student',
+            'courses.created_at',
             'levels.level as level_name',
             'subjects.name as subject_name'
-        ])->get();
+        ])->paginate($limit);
     }
 
     public function findById(int $id)
@@ -70,7 +90,7 @@ class CourseService
 
         // Filter by name
         if (isset($params['name'])) {
-            $query->where('name', 'like', '%' . $params['name'] . '%');
+            $query->whereRaw('unaccent(name) ilike unaccent(?)', ["%{$params['name']}%"]);
         }
 
         // Filter by target student

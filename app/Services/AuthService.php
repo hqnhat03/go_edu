@@ -161,6 +161,7 @@ class AuthService
                 'email' => $user->email,
                 'role' => $role,
                 'avatar' => $user->avatar,
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
         ];
     }

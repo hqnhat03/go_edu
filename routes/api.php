@@ -26,6 +26,7 @@ use App\Http\Controllers\ClientCourseController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\CourseRegistrationController;
+use App\Http\Controllers\GuardianPortalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,7 +41,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('/auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('check.domain');
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
@@ -270,4 +271,22 @@ Route::middleware(['auth:api', 'role:teacher'])->prefix('/teacher')->group(funct
     Route::post('/classes/{classId}/announcements', [AnnouncementController::class, 'store']);
     Route::put('/announcements/{id}', [AnnouncementController::class, 'update']);
     Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy']);
+});
+
+// ─── Guardian Portal ──────────────────────────────────────────────────────────
+Route::middleware(['auth:api', 'role:guardian'])->prefix('/guardian')->group(function () {
+    // Dashboard
+    Route::get('/dashboard/stats', [GuardianPortalController::class, 'dashboardStats']);
+
+    // Profile
+    Route::get('/profile', [GuardianPortalController::class, 'getProfile']);
+    Route::put('/profile', [GuardianPortalController::class, 'updateProfile']);
+
+    // Students
+    Route::get('/students', [GuardianPortalController::class, 'myStudents']);
+    Route::get('/students/{id}', [GuardianPortalController::class, 'studentDetail']);
+    Route::get('/students/{id}/stats', [GuardianPortalController::class, 'studentStats']);
+    Route::get('/students/{id}/schedules', [GuardianPortalController::class, 'studentSchedules']);
+    Route::get('/students/{id}/exam-results', [GuardianPortalController::class, 'studentExamResults']);
+    Route::get('/students/{id}/sessions', [GuardianPortalController::class, 'studentSessions']);
 });

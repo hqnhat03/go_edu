@@ -35,36 +35,44 @@ class AdminService
 
 
 
-    public function listAdmin(array $param): mixed
+    public function listAdmin(array $params): mixed
     {
         $query = $this->excludeRolesQuery();
 
-        if (!empty($param['search'])) {
-            $query->where(function ($q) use ($param) {
-                $q->where('name', 'like', '%' . $param['search'] . '%')
-                    ->orWhere('email', 'like', '%' . $param['search'] . '%');
+        if (!empty($params['search'])) {
+            $query->where(function ($q) use ($params) {
+                $q->whereRaw('unaccent(name) ilike unaccent(?)', ["%{$params['search']}%"])
+                    ->orWhere('email', 'like', '%' . $params['search'] . '%')
+                    ->orWhere('phone', 'like', '%' . $params['search'] . '%');
             });
         }
 
-        if (!empty($param['status'])) {
-            $query->where('status', $param['status']);
+        if (isset($params['status']) && $params['status'] !== 'all') {
+            $query->where('status', $params['status']);
         }
 
-        $admins = $query->select([
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortOrder = $params['sort_order'] ?? 'desc';
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'status', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+
+        $limit = $params['per_page'] ?? 10;
+
+        return $query->select([
             'id',
             'name',
             'email',
             'phone',
             'avatar',
             'status',
-        ])->get();
-
-        return $admins->map(
-            fn($admin) => [
-                ...$admin->only(['id', 'name', 'email', 'phone', 'avatar', 'status']),
-                'roles' => $admin->roles->pluck('name')
-            ]
-        );
+            'created_at'
+        ])->paginate($limit);
     }
 
     public function createAdmin(array $data): array

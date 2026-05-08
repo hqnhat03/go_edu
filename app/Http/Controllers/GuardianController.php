@@ -19,8 +19,31 @@ class GuardianController extends Controller
 
     public function index(Request $request)
     {
-        $data = $this->guardianService->listGuardian($request->all());
-        return ApiResponse::success($data, "Lấy danh sách người giám hộ thành công");
+        $guardians = $this->guardianService->listGuardian($request->all());
+        return ApiResponse::success($guardians->getCollection()->map(function ($guardian) {
+            return [
+                'id' => $guardian->id,
+                'name' => $guardian->name, // from joined users table
+                'email' => $guardian->email,
+                'phone' => $guardian->phone,
+                'status' => $guardian->status,
+                'avatar' => $guardian->avatar,
+                'gender' => $guardian->gender,
+                'address' => $guardian->address,
+                'date_of_birth' => $guardian->date_of_birth,
+                'students' => $guardian->students->map(function ($student) {
+                    return [
+                        'id' => $student->id,
+                        'name' => $student->user->name,
+                    ];
+                })
+            ];
+        }), "Lấy danh sách người giám hộ thành công", [
+            'total' => $guardians->total(),
+            'per_page' => $guardians->perPage(),
+            'current_page' => $guardians->currentPage(),
+            'last_page' => $guardians->lastPage()
+        ]);
     }
 
     public function store(CreateRequest $request)

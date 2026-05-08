@@ -66,41 +66,49 @@ class GuardianService
 
     public function listGuardian(array $params)
     {
-        $query = Guardian::with(['user', 'students.user']);
+        $query = Guardian::query()->join('users', 'users.id', '=', 'guardians.user_id');
 
         if (!empty($params['search'])) {
-            $query->whereHas('user', function ($q) use ($params) {
-                $q->where('name', 'like', '%' . $params['search'] . '%')
-                ->orWhere('email', 'like', '%' . $params['search'] . '%')
-                ->orWhere('phone', 'like', '%' . $params['search'] . '%');
+            $query->where(function ($q) use ($params) {
+                $q->whereRaw('unaccent(users.name) ilike unaccent(?)', ["%{$params['search']}%"])
+                    ->orWhere('users.email', 'like', '%' . $params['search'] . '%')
+                    ->orWhere('users.phone', 'like', '%' . $params['search'] . '%');
             });
         }
 
-        if (isset($params['status'])) {
-            $query->whereHas('user', function ($q) use ($params) {
-                $q->where('status', $params['status']);
-            });
+        if (isset($params['status']) && $params['status'] !== 'all') {
+            $query->where('users.status', $params['status']);
         }
 
-        return $query->get()->map(function ($guardian) {
-            return [
-                'id' => $guardian->id,
-                'name' => $guardian->user->name,
-                'email' => $guardian->user->email,
-                'phone' => $guardian->user->phone,
-                'status' => $guardian->user->status,
-                'avatar' => $guardian->user->avatar,
-                'gender' => $guardian->user->gender,
-                'address' => $guardian->user->address,
-                'date_of_birth' => $guardian->user->date_of_birth,
-                'students' => $guardian->students->map(function ($student) {
-                    return [
-                        'id' => $student->id,
-                        'name' => $student->user->name,
-                    ];
-                })
-            ];
-        });
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortOrder = $params['sort_order'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'status', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            if (in_array($sortBy, ['name', 'email', 'phone', 'status', 'created_at'])) {
+                $query->orderBy("users.$sortBy", $sortOrder);
+            } else {
+                $query->orderBy("guardians.$sortBy", $sortOrder);
+            }
+        } else {
+            $query->latest('users.created_at');
+        }
+
+        $limit = $params['limit'] ?? 10;
+
+        return $query->select([
+            'guardians.id',
+            'users.name',
+            'users.email',
+            'users.phone',
+            'users.status',
+            'users.avatar',
+            'users.gender',
+            'users.address',
+            'users.date_of_birth',
+        ])->with('students.user')->paginate($limit);
     }
 
     public function updateGuardian(array $data, $id)

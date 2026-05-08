@@ -77,39 +77,63 @@ class StudentService
     public function listStudent(array $params)
     {
         $query = Student::query()
-            ->with(['user'])
-            ->orderBy('created_at', 'desc');
+            ->join('users', 'users.id', '=', 'students.user_id')
+            ->select([
+                'students.*',
+                'users.name',
+                'users.email',
+                'users.phone',
+                'users.status',
+                'users.avatar',
+                'users.created_at as user_created_at'
+            ]);
 
         if (isset($params['q'])) {
-            $query->whereHas('user', function ($q) use ($params) {
-                $q->where('name', 'like', '%' . $params['q'] . '%')
-                    ->orWhere('email', 'like', '%' . $params['q'] . '%');
+            $query->where(function ($q) use ($params) {
+                $q->whereRaw('unaccent(users.name) ilike unaccent(?)', ["%{$params['q']}%"])
+                    ->orWhere('users.email', 'like', '%' . $params['q'] . '%')
+                    ->orWhere('users.phone', 'like', '%' . $params['q'] . '%');
             });
         }
 
-        if (isset($params['status'])) {
-            $query->whereHas('user', function ($q) use ($params) {
-                $q->where('status', $params['status']);
-            });
+        if (isset($params['status']) && $params['status'] !== 'all') {
+            $query->where('users.status', $params['status']);
         }
 
-        if (isset($params['student_type'])) {
-            $query->where('student_type', $params['student_type']);
+        if (isset($params['student_type']) && $params['student_type'] !== 'all') {
+            $query->where('students.student_type', $params['student_type']);
+        }
+
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortOrder = $params['sort_order'] ?? 'desc';
+
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'status', 'created_at', 'student_type'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            if (in_array($sortBy, ['name', 'email', 'phone', 'status'])) {
+                $query->orderBy("users.$sortBy", $sortOrder);
+            } elseif ($sortBy === 'created_at') {
+                $query->orderBy("students.created_at", $sortOrder);
+            } else {
+                $query->orderBy("students.$sortBy", $sortOrder);
+            }
+        } else {
+            $query->orderBy('students.created_at', 'desc');
         }
 
         $limit = $params['limit'] ?? 10;
         $students = $query->paginate($limit);
 
         $students->getCollection()->transform(function ($student) {
-            $user = $student->user;
             return [
                 'id' => $student->id,
                 'student_type' => $student->student_type,
-                'name' => $user->name ?? null,
-                'email' => $user->email ?? null,
-                'phone' => $user->phone ?? null,
-                'status' => $user->status ?? null,
-                'avatar' => $user->avatar ?? null,
+                'name' => $student->name,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'status' => $student->status,
+                'avatar' => $student->avatar,
                 'created_at' => $student->created_at,
             ];
         });
@@ -227,7 +251,7 @@ class StudentService
             return response()->json([]);
         }
 
-        $students->where('users.name', 'like', '%' . $name . '%');
+        $students->whereRaw('unaccent(users.name) ilike unaccent(?)', ["%{$name}%"]);
 
         // keyword ngắn → limit ít
         if (mb_strlen($name) < 3) {

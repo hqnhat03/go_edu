@@ -25,12 +25,13 @@ class CheckRoleByDomain
         // 2. Định nghĩa bản đồ Domain => Role tương ứng
         $baseDomain = config('app.frontend_domain');
         $domainMap = [
-            $baseDomain => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            $baseDomain => ['type' => 'exclude', 'roles' => ['student', 'teacher', 'guardian']],
             'teacher.' . $baseDomain => ['type' => 'allow', 'roles' => ['teacher']],
             'student.' . $baseDomain => ['type' => 'allow', 'roles' => ['student']],
+            'guardian.' . $baseDomain => ['type' => 'allow', 'roles' => ['guardian']],
             // DEV
-            'localhost' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
-            '127.0.0.1' => ['type' => 'exclude', 'roles' => ['student', 'teacher']],
+            'localhost' => ['type' => 'exclude', 'roles' => ['student', 'teacher', 'guardian']],
+            '127.0.0.1' => ['type' => 'exclude', 'roles' => ['student', 'teacher', 'guardian']],
         ];
 
         // Nếu domain không nằm trong danh sách quản lý, có thể chặn hoặc bỏ qua

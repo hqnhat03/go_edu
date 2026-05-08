@@ -24,7 +24,12 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $courses = $this->courseService->getList($request->all());
-        return ApiResponse::success($courses, 'Lấy danh sách khóa học thành công');
+        return ApiResponse::success($courses->items(), 'Lấy danh sách khóa học thành công', [
+            'total' => $courses->total(),
+            'per_page' => $courses->perPage(),
+            'current_page' => $courses->currentPage(),
+            'last_page' => $courses->lastPage()
+        ]);
     }
 
     public function show($id)

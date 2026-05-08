@@ -20,8 +20,19 @@ class AdminController extends Controller
 
     public function index(Request $request)
     {
-        $data = $this->adminService->listAdmin($request->all());
-        return ApiResponse::success($data);
+        $admins = $this->adminService->listAdmin($request->all());
+        
+        return ApiResponse::success($admins->getCollection()->map(function ($admin) {
+            return [
+                ...$admin->only(['id', 'name', 'email', 'phone', 'avatar', 'status']),
+                'roles' => $admin->roles->pluck('name')
+            ];
+        }), 'Lấy danh sách admin thành công', [
+            'total' => $admins->total(),
+            'per_page' => $admins->perPage(),
+            'current_page' => $admins->currentPage(),
+            'last_page' => $admins->lastPage()
+        ]);
     }
 
     public function store(CreateRequest $request)
