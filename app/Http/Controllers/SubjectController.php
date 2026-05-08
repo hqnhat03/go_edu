@@ -19,8 +19,13 @@ class SubjectController extends Controller
 
     public function index(Request $request)
     {
-        $data = $this->subjectService->listSubject($request->all());
-        return ApiResponse::success($data, 'Lấy danh sách môn học thành công');
+        $subjects = $this->subjectService->listSubject($request->all());
+        return ApiResponse::success($subjects->items(), 'Lấy danh sách môn học thành công', [
+            'total' => $subjects->total(),
+            'per_page' => $subjects->perPage(),
+            'current_page' => $subjects->currentPage(),
+            'last_page' => $subjects->lastPage()
+        ]);
     }
 
     public function store(CreateRequest $request)

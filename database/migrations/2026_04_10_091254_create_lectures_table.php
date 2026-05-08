@@ -16,8 +16,9 @@ return new class extends Migration {
             $table->integer('duration_time');
             $table->integer('lecture_number');
             $table->string('document_url')->nullable();
-            $table->string('video_url');
-            $table->text('description');
+            $table->string('video_url')->nullable();
+            $table->text('description')->nullable();
+            $table->enum('status', ['pending', 'published', 'rejected'])->default('pending');
             $table->foreignId('class_id')->constrained('class_rooms')->cascadeOnDelete();
             $table->timestamps();
         });

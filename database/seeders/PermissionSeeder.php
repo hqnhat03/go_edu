@@ -76,7 +76,12 @@ class PermissionSeeder extends Seeder
             'guardian_edit',
             'guardian_delete',
             'course_registration_list',
-            'course_registration_edit'
+            'course_registration_edit',
+            'lecture_list',
+            'lecture_detail',
+            'lecture_create',
+            'lecture_edit',
+            'lecture_delete'
         ];
 
 

@@ -15,18 +15,41 @@ class SubjectService
     {
         $query = Subject::query();
 
-        if (isset($params['name'])) {
+        if (isset($params['name']) && $params['name'] !== '') {
             $query->where('name', 'like', '%' . $params['name'] . '%');
         }
 
-        if (isset($params['status'])) {
+        if (isset($params['status']) && $params['status'] !== '' && $params['status'] !== 'all') {
             $query->where('status', $params['status']);
         }
 
-        if (isset($params['category'])) {
-            $query->where('category', $params['category']);
+        if (isset($params['category']) && $params['category'] !== '' && $params['category'] !== 'all') {
+            // Find the category name from the slug if it looks like a slug
+            $categories = Subject::query()->select('category')->distinct()->pluck('category');
+            $matchedCategory = $categories->first(function ($cat) use ($params) {
+                return Str::slug($cat) === $params['category'];
+            });
+
+            if ($matchedCategory) {
+                $query->where('category', $matchedCategory);
+            } else {
+                $query->where('category', $params['category']);
+            }
         }
-        return $query->get();
+
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortOrder = $params['sort_order'] ?? 'desc';
+        $allowedSortFields = ['id', 'name', 'category', 'status', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $perPage = $params['per_page'] ?? 10;
+        return $query->paginate($perPage);
     }
 
 

@@ -136,6 +136,17 @@ Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
         Route::delete('/{id}', 'destroy')->middleware('permission:class_delete');
         Route::post('/{id}/assign-students', 'assignStudents')->middleware('permission:class_edit');
         Route::post('/{id}/remove-students', 'removeStudents')->middleware('permission:class_edit');
+
+        // Manage Lectures through Class
+        Route::get('/{classId}/lectures', [LectureController::class, 'indexByAdmin'])->middleware('permission:class_edit');
+        Route::post('/{classId}/lectures', [LectureController::class, 'storeByAdmin'])->middleware('permission:class_edit');
+    });
+
+    Route::prefix('/lectures')->controller(LectureController::class)->group(function () {
+        Route::get('/{id}', 'showByAdmin')->middleware('permission:class_edit');
+        Route::put('/{id}', 'updateByAdmin')->middleware('permission:class_edit');
+        Route::delete('/{id}', 'destroyByAdmin')->middleware('permission:class_edit');
+        Route::post('/bulk-status', 'bulkStatusByAdmin')->middleware('permission:class_edit');
     });
 
     Route::prefix('/news')->controller(NewController::class)->group(function () {

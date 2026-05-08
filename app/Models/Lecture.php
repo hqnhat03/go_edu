@@ -14,7 +14,6 @@ class Lecture extends Model
         'video_url',
         'description',
         'status',
-        'teacher_id',
         'class_id',
     ];
 
@@ -32,13 +31,5 @@ class Lecture extends Model
     public function classRoom()
     {
         return $this->belongsTo(ClassRoom::class, 'class_id');
-    }
-
-    /**
-     * Giáo viên tạo buổi học.
-     */
-    public function teacher()
-    {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 }
