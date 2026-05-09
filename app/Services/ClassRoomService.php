@@ -46,7 +46,7 @@ class ClassRoomService
             });
         }
 
-        $data = $query->with(['teachers.user'])
+        $data = $query->with(['teachers.user', 'course'])
             ->withCount('students')
             ->get();
 
@@ -54,6 +54,8 @@ class ClassRoomService
             return [
                 'id' => $class->id,
                 'class_code' => $class->class_code,
+                'course_id' => $class->course_id,
+                'course_name' => $class->course->name,
                 'start_day' => $class->start_day,
                 'end_day' => $class->end_day,
                 'status' => $class->status,
@@ -73,7 +75,8 @@ class ClassRoomService
     {
         $class = ClassRoom::with(['course', 'teachers', 'schedules'])->findOrFail($id);
         return [
-            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
+            ...$class->only('id', 'class_code', 'course_id', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
+            'course_name' => $class->course->name,
             'teachers' => $class->teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
@@ -152,7 +155,8 @@ class ClassRoomService
         }
 
         return [
-            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'status'),
+            ...$class->only('id', 'class_code', 'course_id', 'start_day', 'end_day', 'status'),
+            'course_name' => $class->course->name,
             'class_teachers' => $class->teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,
@@ -239,7 +243,8 @@ class ClassRoomService
         }
 
         return [
-            ...$class->only('id', 'class_code', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
+            ...$class->only('id', 'class_code', 'course_id', 'start_day', 'end_day', 'max_student', 'meeting_url', 'status', 'is_full'),
+            'course_name' => $class->course->name,
             'teachers' => $class->teachers->map(function ($teacher) {
                 return [
                     'id' => $teacher->id,

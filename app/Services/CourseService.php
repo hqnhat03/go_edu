@@ -361,13 +361,17 @@ class CourseService
             'id' => $course->id,
             'name' => $course->name,
             'slug' => $course->slug,
+            'description' => $course->description,
             'image_url' => $course->image_url,
             'price' => $course->price,
             'level' => $course->level?->level,
             'subject' => $course->subject?->name,
             'student_count' => $course->student_count ?? 0,
-            'teachers' => $teachers->unique('id')->values()->all(),
         ];
+
+        if ($course->relationLoaded('classRooms')) {
+            $data['teachers'] = $teachers->unique('id')->values()->all();
+        }
 
         if ($full) {
             $data = array_merge($data, [
