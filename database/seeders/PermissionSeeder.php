@@ -81,7 +81,8 @@ class PermissionSeeder extends Seeder
             'lecture_detail',
             'lecture_create',
             'lecture_edit',
-            'lecture_delete'
+            'lecture_delete',
+            'activity_log_list'
         ];
 
 

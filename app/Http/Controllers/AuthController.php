@@ -7,15 +7,18 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     private $authService;
+    private $activityLogService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, ActivityLogService $activityLogService)
     {
         $this->authService = $authService;
+        $this->activityLogService = $activityLogService;
     }
 
     public function register(RegisterRequest $registerRequest)
@@ -27,6 +30,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         $data = $this->authService->login($request);
+        
         return ApiResponse::success($data, "User logged in successfully");
     }
 
@@ -38,7 +42,15 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $user = auth()->user();
         $this->authService->logout();
+        
+        $this->activityLogService->log(
+            action: 'logout',
+            description: "Người dùng đăng xuất",
+            causer: $user
+        );
+
         return ApiResponse::success(null, "User logged out successfully");
     }
 
@@ -119,6 +131,13 @@ class AuthController extends Controller
 
         try {
             $this->authService->changePassword($request->user(), $request->all());
+            
+            $this->activityLogService->log(
+                action: 'change_password',
+                description: "Người dùng thay đổi mật khẩu",
+                causer: $request->user()
+            );
+
             return ApiResponse::success(null, "Password changed successfully");
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), [], 400);

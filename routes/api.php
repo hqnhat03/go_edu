@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
@@ -171,6 +172,7 @@ Route::middleware(['auth:api'])->prefix('/admin')->group(function () {
     });
 
     Route::get('/permissions', [RoleController::class, 'listPermission'])->middleware('permission:role_list');
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->middleware('permission:activity_log_list');
 });
 
 

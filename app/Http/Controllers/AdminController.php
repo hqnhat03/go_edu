@@ -12,10 +12,12 @@ use Illuminate\Http\Request;
 class AdminController extends Controller
 {
     private AdminService $adminService;
+    private \App\Services\ActivityLogService $activityLogService;
 
-    public function __construct(AdminService $adminService)
+    public function __construct(AdminService $adminService, \App\Services\ActivityLogService $activityLogService)
     {
         $this->adminService = $adminService;
+        $this->activityLogService = $activityLogService;
     }
 
     public function index(Request $request)
@@ -38,8 +40,15 @@ class AdminController extends Controller
     public function store(CreateRequest $request)
     {
         try {
-            $data = $this->adminService->createAdmin($request->validated());
-            return ApiResponse::success($data, 'Tạo admin thành công', [], 201);
+            $user = $this->adminService->createAdmin($request->validated());
+            
+            $this->activityLogService->log(
+                action: 'create_admin',
+                subject: $user,
+                description: "Created a new admin account: " . ($user->name ?? $user->email)
+            );
+
+            return ApiResponse::success($this->adminService->formatAdmin($user), 'Tạo admin thành công', [], 201);
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 422);
         }
@@ -48,8 +57,8 @@ class AdminController extends Controller
     public function show($id)
     {
         try {
-            $data = $this->adminService->getAdmin((int) $id);
-            return ApiResponse::success($data);
+            $user = $this->adminService->getAdmin((int) $id);
+            return ApiResponse::success($this->adminService->formatAdmin($user));
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 404);
         }
@@ -58,8 +67,15 @@ class AdminController extends Controller
     public function update(UpdateRequest $request, $id)
     {
         try {
-            $data = $this->adminService->updateAdmin($request->validated(), (int) $id);
-            return ApiResponse::success($data, 'Cập nhật admin thành công');
+            $user = $this->adminService->updateAdmin($request->validated(), (int) $id);
+            
+            $this->activityLogService->log(
+                action: 'update_admin',
+                subject: $user,
+                description: "Updated admin account: " . ($user->name ?? $user->email)
+            );
+
+            return ApiResponse::success($this->adminService->formatAdmin($user), 'Cập nhật admin thành công');
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 404);
         }
@@ -68,7 +84,14 @@ class AdminController extends Controller
     public function destroy($id)
     {
         try {
-            $this->adminService->deleteAdmin((int) $id);
+            $admin = $this->adminService->deleteAdmin((int) $id);
+            
+            $this->activityLogService->log(
+                action: 'delete_admin',
+                subject: $admin,
+                description: "Deleted admin account: " . ($admin->name ?? $admin->email)
+            );
+
             return ApiResponse::success(null, 'Xóa admin thành công');
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 404);
@@ -78,8 +101,8 @@ class AdminController extends Controller
     public function getProfile()
     {
         try {
-            $data = $this->adminService->getProfile();
-            return ApiResponse::success($data);
+            $user = $this->adminService->getProfile();
+            return ApiResponse::success($this->adminService->formatAdmin($user));
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 404);
         }
@@ -88,8 +111,9 @@ class AdminController extends Controller
     public function updateProfile(Request $request)
     {
         try {
-            $data = $this->adminService->updateProfile($request->all());
-            return ApiResponse::success($data, 'Cập nhật hồ sơ thành công');
+            $user = $this->adminService->updateProfile($request->all());
+            
+            return ApiResponse::success($this->adminService->formatAdmin($user), 'Cập nhật hồ sơ thành công');
         } catch (UserException $e) {
             return ApiResponse::error($e->getMessage(), [], 400);
         }

@@ -8,7 +8,10 @@ use Illuminate\Http\Request;
 
 class StudentPortalController extends Controller
 {
-    public function __construct(private StudentPortalService $service) {}
+    public function __construct(
+        private StudentPortalService $service,
+        private \App\Services\ActivityLogService $activityLogService
+    ) {}
 
     /** GET /student/profile */
     public function getProfile()
@@ -101,6 +104,18 @@ class StudentPortalController extends Controller
     public function submitExam(Request $request, $id)
     {
         $data = $this->service->submitExam((int)$id, $request->get('answers', []));
+        
+        $exam = \App\Models\Exam::find($id);
+        $student = auth()->user()->student;
+
+        $this->activityLogService->log(
+            action: 'submit_exam',
+            subject: $exam,
+            description: "Student " . ($student->name ?? auth()->user()->name) . " submitted exam: " . $exam->name,
+            visibility: 'teacher',
+            groupId: $exam->class_id
+        );
+
         return ApiResponse::success($data, 'Nộp bài thi thành công.');
     }
 

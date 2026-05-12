@@ -8,10 +8,14 @@ use App\Http\Requests\Exam\CreateRequest;
 use App\Http\Requests\Exam\UpdateRequest;
 use Illuminate\Http\Request;
 
+use App\Services\ActivityLogService;
+
 class ExamController extends Controller
 {
-    public function __construct(private ExamService $service)
-    {
+    public function __construct(
+        private ExamService $service,
+        private ActivityLogService $activityLogService
+    ) {
     }
 
     /** GET /teacher/exams */
@@ -80,6 +84,14 @@ class ExamController extends Controller
         ]);
 
         $data = $this->service->syncQuestions($request->input('questions'), (int) $examId);
+        
+        $this->activityLogService->log(
+            action: 'sync_questions',
+            subject: \App\Models\Exam::find($examId),
+            description: "Đã cập nhật bộ câu hỏi cho bài kiểm tra",
+            properties: ['question_count' => count($request->input('questions'))]
+        );
+
         return ApiResponse::success($data, 'Cập nhật danh sách câu hỏi thành công');
     }
 
@@ -120,6 +132,14 @@ class ExamController extends Controller
         ]);
 
         $data = $this->service->grade($request->all(), (int) $id);
+        
+        $this->activityLogService->log(
+            action: 'grade_exam',
+            subject: \App\Models\ExamResult::find($id),
+            description: "Đã chấm điểm bài kiểm tra",
+            properties: ['score' => $request->input('score')]
+        );
+
         return ApiResponse::success($data, 'Chấm điểm thành công');
     }
 }

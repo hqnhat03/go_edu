@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class ClassRoom extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'class_code',
@@ -61,5 +62,10 @@ class ClassRoom extends Model
         $this->update([
             'is_full' => $isFull ? \DB::raw('true') : \DB::raw('false')
         ]);
+    }
+
+    protected function getLogGroupId(): ?int
+    {
+        return $this->id;
     }
 }

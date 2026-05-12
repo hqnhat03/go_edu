@@ -13,10 +13,12 @@ use Illuminate\Http\Request;
 class ClassRoomController extends Controller
 {
     private $classRoomService;
+    private $activityLogService;
 
-    public function __construct(ClassRoomService $classRoomService)
+    public function __construct(ClassRoomService $classRoomService, \App\Services\ActivityLogService $activityLogService)
     {
         $this->classRoomService = $classRoomService;
+        $this->activityLogService = $activityLogService;
     }
 
     public function index(Request $request)
@@ -55,6 +57,14 @@ class ClassRoomController extends Controller
             'student_ids.*' => 'exists:students,id',
         ]);
         $data = $this->classRoomService->assignStudents($id, $request->student_ids);
+        
+        $this->activityLogService->log(
+            action: 'assign_students',
+            subject: \App\Models\ClassRoom::find($id),
+            description: "Assigned students to class",
+            properties: ['student_ids' => $request->student_ids]
+        );
+
         return ApiResponse::success($data, 'Thêm học sinh vào lớp thành công');
     }
 
@@ -65,6 +75,14 @@ class ClassRoomController extends Controller
             'student_ids.*' => 'exists:students,id',
         ]);
         $data = $this->classRoomService->removeStudents($id, $request->student_ids);
+        
+        $this->activityLogService->log(
+            action: 'remove_students',
+            subject: \App\Models\ClassRoom::find($id),
+            description: "Removed students from class",
+            properties: ['student_ids' => $request->student_ids]
+        );
+
         return ApiResponse::success($data, 'Xóa học sinh khỏi lớp thành công');
     }
 }

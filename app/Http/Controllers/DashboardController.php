@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private \App\Services\ActivityLogService $activityLogService
+    ) {}
+
     public function index()
     {
         $totalTeacher = Teacher::count();
@@ -37,12 +41,15 @@ class DashboardController extends Controller
             ];
         }
 
+        $recentActivities = $this->activityLogService->getRecentActivities(5);
+
         return ApiResponse::success([
             'total_teacher' => $totalTeacher,
             'total_student' => $totalStudent,
             'total_course' => $totalCourse,
             'total_new_student' => $totalNewStudent,
             'student_growth' => $studentGrowth,
+            'recent_activities' => $recentActivities,
         ], 'Lấy thông tin dashboard thành công');
     }
 }

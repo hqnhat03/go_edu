@@ -25,7 +25,9 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Listeners\ActivityLogger::class
+        );
     }
 
     /**

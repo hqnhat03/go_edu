@@ -8,7 +8,10 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    public function __construct(private AttendanceService $service) {}
+    public function __construct(
+        private AttendanceService $service,
+        private \App\Services\ActivityLogService $activityLogService
+    ) {}
 
     /**
      * Lấy danh sách học sinh của buổi học để điểm danh.
@@ -34,6 +37,13 @@ class AttendanceController extends Controller
         ]);
 
         $this->service->submitAttendance((int) $sessionId, $request->input('attendance'));
+
+        $this->activityLogService->log(
+            action: 'submit_attendance',
+            subject: \App\Models\ClassSession::find($sessionId),
+            description: "Đã nộp thông tin điểm danh cho buổi học",
+            properties: ['attendance_count' => count($request->input('attendance'))]
+        );
 
         return ApiResponse::success(null, 'Lưu thông tin điểm danh thành công');
     }

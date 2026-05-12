@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Lecture extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'name',
         'duration_time',

@@ -15,7 +15,7 @@ class AdminService
     {
     }
 
-    private function formatAdmin(User $user): array
+    public function formatAdmin(User $user): array
     {
         $data = $user->only([
             'id',
@@ -75,7 +75,7 @@ class AdminService
         ])->paginate($limit);
     }
 
-    public function createAdmin(array $data): array
+    public function createAdmin(array $data): User
     {
         $password = Str::random(10);
         try {
@@ -105,10 +105,10 @@ class AdminService
 
         $this->mailService->sendAdminAccountCreatedInfo($user, $password);
 
-        return $this->formatAdmin($user);
+        return $user;
     }
 
-    public function getAdmin(int $id): array
+    public function getAdmin(int $id): User
     {
         $user = $this->excludeRolesQuery()->where('id', $id)->first();
 
@@ -116,10 +116,10 @@ class AdminService
             throw new UserException('Không tìm thấy admin');
         }
 
-        return $this->formatAdmin($user);
+        return $user;
     }
 
-    public function updateAdmin(array $data, int $id): array
+    public function updateAdmin(array $data, int $id): User
     {
         $user = $this->excludeRolesQuery()->where('id', $id)->first();
 
@@ -149,10 +149,10 @@ class AdminService
             throw $e;
         }
 
-        return $this->formatAdmin($user->fresh('roles') ?? []);
+        return $user->fresh('roles');
     }
 
-    public function deleteAdmin(int $id): int
+    public function deleteAdmin(int $id): User
     {
         $user = $this->excludeRolesQuery()->where('id', $id)->first();
 
@@ -162,15 +162,15 @@ class AdminService
 
         $user->delete();
 
-        return $id;
+        return $user;
     }
 
-    public function getProfile(): array
+    public function getProfile(): User
     {
         return $this->getAdmin(auth()->id());
     }
 
-    public function updateProfile(array $data): array
+    public function updateProfile(array $data): User
     {
         $user = $this->excludeRolesQuery()->where('id', auth()->id())->first();
 
@@ -193,7 +193,7 @@ class AdminService
             throw $e;
         }
 
-        return $this->formatAdmin($user->fresh('roles'));
+        return $user->fresh('roles');
     }
 
     private function excludeRolesQuery()

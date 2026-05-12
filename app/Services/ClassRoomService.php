@@ -169,9 +169,35 @@ class ClassRoomService
     public function update($data, $id)
     {
 
-        $class = ClassRoom::findOrFail($id);
+        $class = ClassRoom::with('schedules')->findOrFail($id);
+
+        // Kiểm tra xem lịch học hoặc ngày bắt đầu/kết thúc có thay đổi không
+        $oldSchedules = $class->schedules->map(function ($s) {
+            return [
+                'day_of_week' => (int)$s->day_of_week,
+                'start_time' => Carbon::parse($s->start_time)->format('H:i:s'),
+                'end_time' => Carbon::parse($s->end_time)->format('H:i:s'),
+            ];
+        })->sortBy(['day_of_week', 'start_time'])->values()->toArray();
+
+        $newSchedules = collect($data['class_schedules'])->map(function ($s) {
+            return [
+                'day_of_week' => (int)$s['day_of_week'],
+                'start_time' => Carbon::parse($s['start_time'])->format('H:i:s'),
+                'end_time' => Carbon::parse($s['end_time'])->format('H:i:s'),
+            ];
+        })->sortBy(['day_of_week', 'start_time'])->values()->toArray();
+
+        $isScheduleChanged = ($class->start_day !== $data['start_day']) ||
+            ($class->end_day !== $data['end_day']) ||
+            ($oldSchedules !== $newSchedules);
+
+        if ($class->students()->exists()) {
+            throw new UserException('Không thể cập nhật lớp học đã có học sinh');
+        }
+
         try {
-            $class = DB::transaction(function () use ($class, $data) {
+            $class = DB::transaction(function () use ($class, $data, $isScheduleChanged) {
                 $class->update([
                     'class_code' => $data['class_code'],
                     'start_day' => $data['start_day'],
@@ -228,9 +254,11 @@ class ClassRoomService
                     ['day_of_week', 'start_time', 'end_time']
                 );
 
-                // Xóa sessions cũ và tạo lại
-                ClassSession::where('class_id', $class->id)->delete();
-                $this->generateSessions($class, $class_schedules);
+                // Chỉ xóa sessions cũ và tạo lại nếu có thay đổi lịch học
+                if ($isScheduleChanged) {
+                    ClassSession::where('class_id', $class->id)->delete();
+                    $this->generateSessions($class, $class_schedules);
+                }
 
                 $class->refreshIsFullStatus();
                 return $class;

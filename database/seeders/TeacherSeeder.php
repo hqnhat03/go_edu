@@ -15,42 +15,35 @@ class TeacherSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->count(10)->create();
-        $userIds = DB::table('users')->latest('id')->limit(10)->pluck('id')->toArray();
-        $teachers = [];
-        $expertises = ['Toán học', 'Vật lý', 'Hóa học', 'Sinh học', 'Tin học'];
-        foreach ($userIds as $userId) {
-            $expertise = $expertises[array_rand($expertises)];
-            $teachers[] = [
-                'user_id' => $userId,
-                'expertise' => $expertise,
+        // Tạo 50 giáo viên ngẫu nhiên
+        \App\Models\Teacher::factory()->count(50)->create()->each(function ($teacher) {
+            $teacher->user->assignRole('teacher');
+        });
+
+        // Tạo 1 giáo viên cố định để test
+        $user = User::updateOrCreate(
+            ['email' => 'teacher@gmail.com'],
+            [
+                'name' => 'teacher',
+                'password' => bcrypt('password'),
+                'phone' => '0123456789',
+                'address' => 'Hà Nội',
+                'gender' => 'male',
+                'status' => 'active',
+                'date_of_birth' => '2000-01-01',
+                'avatar' => null,
+            ]
+        );
+        $user->assignRole('teacher');
+        
+        if (!$user->teacher) {
+            $user->teacher()->create([
+                'expertise' => 'Toán học',
                 'experience' => 1,
                 'nationality' => 'Việt Nam',
-                'bio' => 'Giáo viên dạy ' . $expertise,
+                'bio' => 'Giáo viên dạy Toán học',
                 'target_student' => 'student',
-            ];
+            ]);
         }
-
-        Teacher::insert($teachers);
-
-        $user = User::create([
-            'name' => 'teacher',
-            'email' => 'teacher@gmail.com',
-            'password' => 'password',
-            'phone' => '0123456789',
-            'address' => 'Hà Nội',
-            'gender' => 'male',
-            'status' => 'active',
-            'date_of_birth' => '2000-01-01',
-            'avatar' => null,
-        ]);
-        $user->assignRole('teacher');
-        $user->teacher()->create([
-            'expertise' => 'Toán học',
-            'experience' => 1,
-            'nationality' => 'Việt Nam',
-            'bio' => 'Giáo viên dạy Toán học',
-            'target_student' => 'student',
-        ]);
     }
 }
